@@ -66,8 +66,8 @@
 </head>
 <body class="bg-brand-green text-slate-800 min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-emerald-200">
 
-  <!-- ヘッダー -->
-  <header class="bg-brand-dark border-b-4 border-emerald-950 shadow-xl py-4 px-4 text-center relative z-10">
+  <!-- ヘッダー（審議中画面の上でも押せるよう z-index を50に設定） -->
+  <header class="bg-brand-dark border-b-4 border-emerald-950 shadow-xl py-4 px-4 text-center relative z-50">
     <div class="max-w-lg mx-auto flex items-center justify-center gap-2">
       <span class="text-2xl drop-shadow">🏇</span>
       <h1 class="text-2xl sm:text-3xl font-black tracking-wider title-white-outline font-heavy-gothic">
@@ -76,12 +76,12 @@
       <span class="text-2xl drop-shadow">🏇</span>
     </div>
     
-    <button id="btn-open-admin" class="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 text-xs font-bold flex items-center gap-1 bg-black/20 hover:bg-black/40 rounded-lg transition z-20">
+    <button id="btn-open-admin" class="absolute right-3 top-1/2 -translate-y-1/2 text-white p-2 text-xs font-bold flex items-center gap-1 bg-black/40 hover:bg-black/60 border border-white/30 rounded-lg transition">
       ⚙️ 管理
     </button>
   </header>
 
-  <!-- 🚨 【新機能】審議中画面オーバーレイ (青背景/赤枠内審議中/白抜き黒フチ文字) -->
+  <!-- 🚨 審議中画面オーバーレイ（z-index を40に設定してヘッダー直下に配置） -->
   <div id="deliberation-screen" class="hidden fixed inset-0 bg-blue-900 z-40 flex flex-col items-center justify-center p-6 text-center fade-in">
     <div class="max-w-md w-full space-y-8">
       <!-- 赤色の背景ボックス -->
@@ -302,8 +302,8 @@
     </div>
   </main>
 
-  <!-- 管理者モーダル -->
-  <div id="admin-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <!-- 管理者モーダル (z-index を60にして最前面に設置) -->
+  <div id="admin-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
     <div class="bg-white border-4 border-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
       <button id="btn-close-admin" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       
@@ -312,14 +312,14 @@
       </h3>
 
       <div id="admin-auth" class="space-y-3">
-        <p class="text-xs text-slate-600">管理パスワードを入力してください</p>
+        <p class="text-xs text-slate-600">管理パスワードを入力してください（初期: admin123）</p>
         <input type="password" id="admin-pass" placeholder="パスワード" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-600">
         <button id="btn-admin-login" class="w-full py-2 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 font-heavy-gothic">ログイン</button>
       </div>
 
       <div id="admin-controls" class="hidden space-y-5">
         
-        <!-- 1. 審議中切り替えスイッチ（新機能） -->
+        <!-- 1. 審議中切り替えスイッチ -->
         <div class="p-3.5 bg-blue-50 border border-blue-300 rounded-xl space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-blue-900 font-heavy-gothic">⚖️ 審議中ステータス</span>
@@ -515,7 +515,6 @@
       initMultiSelects();
       checkVotedStatus();
       
-      // 定期的に審議状態やオッズを自動更新 (5秒おき)
       setInterval(fetchResults, 5000);
     }
 
@@ -968,7 +967,6 @@
       btnAdminLogin.textContent = 'ログイン';
     };
 
-    // 審議中表示のトグル切り替え
     btnToggleDeliberative.onclick = async () => {
       isDeliberating = !isDeliberating;
       updateDeliberationUI();
@@ -1031,52 +1029,3 @@
           console.error(err);
           alert('送信エラーが発生しました');
         }
-      }
-
-      btnSetWinner.disabled = false;
-      btnSetWinner.textContent = '着順結果を確定（審議解除）';
-    };
-
-    btnChangePass.onclick = async () => {
-      const oldPass = inputOldPass.value.trim();
-      const newPass = inputNewPass.value.trim();
-
-      if (!oldPass || !newPass) {
-        alert('現在のパスワードと新しいパスワードの両方を入力してください');
-        return;
-      }
-
-      btnChangePass.disabled = true;
-
-      try {
-        const response = await fetch(GAS_WEB_APP_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'changeAdminPassword', oldPassword: oldPass, newPassword: newPass })
-        });
-        const res = await response.json();
-
-        if (res.success) {
-          alert('パスワードを変更しました！');
-          inputOldPass.value = '';
-          inputNewPass.value = '';
-        } else {
-          alert(res.message || '現在のパスワードが違います');
-        }
-      } catch (e) {
-        console.error(e);
-        alert('変更エラーが発生しました');
-      }
-
-      btnChangePass.disabled = false;
-    };
-
-    btnRefreshAdminData.onclick = () => {
-      fetchResults();
-    };
-
-    init();
-  </script>
-</body>
-</html>
