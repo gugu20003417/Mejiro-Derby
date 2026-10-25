@@ -22,6 +22,24 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* 勝利・的中アニメーション */
+    @keyframes winPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    .animate-win-pulse {
+      animation: winPulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes confettiBounce {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(5deg); }
+      100% { transform: translateY(0) rotate(0deg); }
+    }
+    .animate-bounce-slow {
+      animation: confettiBounce 2s infinite ease-in-out;
+    }
+
     /* 太ゴシック（視認性の高い極太フォント） */
     .font-heavy-gothic {
       font-family: "Hiragino Kaku Gothic StdN", "Hiragino Sans", "Arial Black", "Impact", "メイリオ", sans-serif;
@@ -118,31 +136,50 @@
         </div>
       </section>
 
-      <!-- STEP 3: 馬券風 投票完了・オッズ（集計）画面 -->
+      <!-- STEP 3: 馬券風 投票完了・結果画面 -->
       <section id="step-voted" class="hidden space-y-5 fade-in py-2">
         
         <!-- 発行済み馬券カード -->
-        <div class="bg-emerald-50 border-4 border-emerald-200 rounded-xl p-5 shadow-2xl relative overflow-hidden">
-          <div class="absolute -right-6 -top-6 w-20 h-20 bg-brand-green rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px] font-heavy-gothic">
-            済
+        <div id="ticket-card" class="bg-emerald-50 border-4 border-emerald-200 rounded-xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300">
+          
+          <!-- 右上ステータスバッジ -->
+          <div id="ticket-badge" class="absolute -right-6 -top-6 w-20 h-20 bg-brand-green rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px] font-heavy-gothic">
+            確定
           </div>
 
           <div class="border-b-2 border-slate-800 pb-2 mb-3 flex justify-between items-baseline">
             <span class="font-black text-lg text-brand-green font-heavy-gothic">めじろダービー 投票券</span>
-            <span class="text-xs font-mono font-bold text-slate-500">投票完了</span>
+            <span id="ticket-status-sub" class="text-xs font-mono font-bold text-slate-500">投票完了</span>
           </div>
 
-          <!-- 変更点: 「確定済」と画面いっぱいの巨大「◯番」表示 -->
-          <div class="bg-white border-2 border-slate-900 rounded-xl p-6 text-center my-3 shadow-inner">
-            <p class="text-sm font-black text-slate-500 tracking-widest mb-1 font-heavy-gothic">確定済</p>
+          <!-- メイン結果枠 -->
+          <div id="result-display-box" class="bg-white border-2 border-slate-900 rounded-xl p-6 text-center my-3 shadow-inner relative transition-all">
+            <p id="voted-status-title" class="text-sm font-black text-slate-500 tracking-widest mb-1 font-heavy-gothic">確定済</p>
             <h2 id="voted-result-number" class="text-7xl sm:text-8xl font-black text-brand-green tracking-tight py-2 font-heavy-gothic leading-none">
               3番
             </h2>
+
+            <!-- 的中時の払戻・メッセージエリア -->
+            <div id="win-payout-banner" class="hidden mt-3 pt-3 border-t-2 border-amber-400">
+              <span class="bg-red-600 text-white font-black text-xs px-3 py-1 rounded-full animate-bounce-slow inline-block mb-1">🎉 的中おめでとうございます！</span>
+              <p class="text-amber-800 text-xs font-bold font-heavy-gothic">払戻対象の馬券です！窓口で確定画面をお見せください。</p>
+            </div>
+
+            <!-- 不的中時のメッセージ -->
+            <div id="lose-banner" class="hidden mt-3 pt-2 border-t border-slate-200">
+              <p class="text-slate-400 text-xs font-bold font-heavy-gothic">残念！不的中です（またのご挑戦をお待ちしております）</p>
+            </div>
           </div>
 
           <div class="text-[10px] text-slate-500 font-mono text-right">
             端末認証ID: LOCAL-DEVICE-VOTED
           </div>
+        </div>
+
+        <!-- 的中馬（1着）の公式発表バナー（未発表時は非表示） -->
+        <div id="winning-announcement-banner" class="hidden bg-amber-400 border-2 border-amber-600 rounded-xl p-3 text-amber-950 font-heavy-gothic text-center shadow-lg animate-fade-in">
+          <span class="text-xs tracking-wider uppercase block text-amber-900 font-bold">🏁 レース結果（公式発表）</span>
+          <p class="text-xl font-black mt-0.5">1着的中馬: <span id="official-winning-number" class="text-2xl text-red-700 underline">◯番</span></p>
         </div>
 
         <!-- 全体オッズ（投票分布） -->
@@ -181,10 +218,11 @@
       </div>
 
       <div id="admin-controls" class="hidden space-y-5">
-        <!-- 締め切りスイッチ -->
+        
+        <!-- 1. 締め切りスイッチ -->
         <div class="p-3.5 bg-slate-100 rounded-xl space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500">現在のステータス</span>
+            <span class="text-xs font-bold text-slate-500">投票受付ステータス</span>
             <span id="admin-status-text" class="text-sm font-black text-emerald-700 font-heavy-gothic">🟢 投票受付中</span>
           </div>
           <button id="btn-toggle-close" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg text-xs transition font-heavy-gothic shadow">
@@ -192,7 +230,31 @@
           </button>
         </div>
 
-        <!-- リアルタイム投票状況の集計エリア -->
+        <!-- 2. 【新規】的中馬（1着馬）指定機能 -->
+        <div class="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-xl space-y-2">
+          <h4 class="text-xs font-black text-amber-900 flex items-center gap-1 font-heavy-gothic">
+            🏆 レース結果・的中馬（1着馬）の確定
+          </h4>
+          <p class="text-[11px] text-amber-700">レース終了後、1着馬を選択して確定ボタンを押してください。</p>
+
+          <div class="flex gap-2">
+            <select id="admin-winning-select" class="flex-grow px-3 py-2 border-2 border-amber-400 bg-white rounded-lg text-xs font-black text-slate-800 focus:outline-none font-heavy-gothic">
+              <option value="0">未発表（レース前・進行中）</option>
+              <option value="1">1番馬</option>
+              <option value="2">2番馬</option>
+              <option value="3">3番馬</option>
+              <option value="4">4番馬</option>
+              <option value="5">5番馬</option>
+              <option value="6">6番馬</option>
+              <option value="7">7番馬</option>
+            </select>
+            <button id="btn-save-winning" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black rounded-lg text-xs transition font-heavy-gothic shadow whitespace-nowrap">
+              確定・発表
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. リアルタイム投票状況の集計エリア -->
         <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
           <div class="flex items-center justify-between border-b pb-2">
             <h4 class="text-xs font-black text-slate-800 flex items-center gap-1 font-heavy-gothic">
@@ -209,6 +271,7 @@
             🔄 集計データを最新化
           </button>
         </div>
+
       </div>
     </div>
   </div>
@@ -219,15 +282,17 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxBD75eXUs1yGjDAyetGVk02MaUM6YfYzHjpvg2gTVRpoFNi7bfaT3-vXG_p197_sPZ/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3c1xhQLXvQR8plRhOey6KuCQrdkUTCbds1heJTgx5mTNnEuiqcWWh1NvECUyk2erA/exec";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY = 'voted_option_id';
     const CLOSED_KEY = 'is_voting_closed';
+    const WINNING_KEY = 'winning_option_number';
     const ADMIN_PASS = 'admin123';
 
     let selectedOption = null;
     let isClosed = false;
+    let currentWinningNumber = 0; // 0 = 未発表
 
     const elSelect = document.getElementById('step-select');
     const elConfirm = document.getElementById('step-confirm');
@@ -241,6 +306,15 @@
 
     const confirmTarget = document.getElementById('confirm-target');
     const votedResultNumber = document.getElementById('voted-result-number');
+    const votedStatusTitle = document.getElementById('voted-status-title');
+    const ticketCard = document.getElementById('ticket-card');
+    const ticketBadge = document.getElementById('ticket-badge');
+    const ticketStatusSub = document.getElementById('ticket-status-sub');
+    const winPayoutBanner = document.getElementById('win-payout-banner');
+    const loseBanner = document.getElementById('lose-banner');
+    const winningAnnouncementBanner = document.getElementById('winning-announcement-banner');
+    const officialWinningNumber = document.getElementById('official-winning-number');
+
     const resultsContainer = document.getElementById('results-container');
     const totalVotesCount = document.getElementById('total-votes-count');
 
@@ -254,12 +328,16 @@
     const adminControls = document.getElementById('admin-controls');
     const adminStatusText = document.getElementById('admin-status-text');
     const btnToggleClose = document.getElementById('btn-toggle-close');
+    const adminWinningSelect = document.getElementById('admin-winning-select');
+    const btnSaveWinning = document.getElementById('btn-save-winning');
     const adminTotalVotes = document.getElementById('admin-total-votes');
     const adminVotesList = document.getElementById('admin-votes-list');
     const btnRefreshAdminData = document.getElementById('btn-refresh-admin-data');
 
     function init() {
       isClosed = localStorage.getItem(CLOSED_KEY) === 'true';
+      currentWinningNumber = parseInt(localStorage.getItem(WINNING_KEY) || '0');
+      
       updateClosedUI();
       renderOptions();
       checkVotedStatus();
@@ -332,7 +410,62 @@
 
     function showVotedScreen(optionId) {
       votedResultNumber.textContent = `${optionId}番`;
+      
+      // 的中判定演出の適用
+      applyWinningEffects(optionId, currentWinningNumber);
+
       showStep(elVoted);
+    }
+
+    // 的中・不的中演出制御
+    function applyWinningEffects(myOptionId, winningNum) {
+      const myNum = parseInt(myOptionId);
+
+      // デフォルト状態の初期化
+      ticketCard.className = "bg-emerald-50 border-4 border-emerald-200 rounded-xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300";
+      ticketBadge.className = "absolute -right-6 -top-6 w-20 h-20 bg-brand-green rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px] font-heavy-gothic";
+      ticketBadge.textContent = "確定";
+      ticketStatusSub.textContent = "投票完了";
+      ticketStatusSub.className = "text-xs font-mono font-bold text-slate-500";
+      votedResultNumber.className = "text-7xl sm:text-8xl font-black text-brand-green tracking-tight py-2 font-heavy-gothic leading-none";
+
+      winPayoutBanner.classList.add('hidden');
+      loseBanner.classList.add('hidden');
+
+      if (!winningNum || winningNum === 0) {
+        // 的中馬未発表時
+        votedStatusTitle.textContent = "確定済";
+        votedStatusTitle.className = "text-sm font-black text-slate-500 tracking-widest mb-1 font-heavy-gothic";
+        winningAnnouncementBanner.classList.add('hidden');
+      } else {
+        // 的中馬確定時
+        winningAnnouncementBanner.classList.remove('hidden');
+        officialWinningNumber.textContent = `${winningNum}番`;
+
+        if (myNum === winningNum) {
+          // 🎉 的中演出
+          votedStatusTitle.textContent = "🎯 的中（1着）";
+          votedStatusTitle.className = "text-base font-black text-red-600 tracking-wider mb-1 font-heavy-gothic animate-pulse";
+          votedResultNumber.className = "text-7xl sm:text-8xl font-black text-red-600 tracking-tight py-2 font-heavy-gothic leading-none drop-shadow";
+
+          ticketCard.className = "bg-amber-50 border-4 border-amber-400 rounded-xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300 animate-win-pulse";
+          ticketBadge.className = "absolute -right-6 -top-6 w-20 h-20 bg-red-600 rotate-12 flex items-end justify-center pb-2 text-white font-black text-xs font-heavy-gothic shadow-lg";
+          ticketBadge.textContent = "的中";
+          ticketStatusSub.textContent = "★ 的中馬券 ★";
+          ticketStatusSub.className = "text-xs font-bold text-red-600 animate-pulse";
+
+          winPayoutBanner.classList.remove('hidden');
+        } else {
+          // ✕ 不的中演出
+          votedStatusTitle.textContent = "不的中";
+          votedStatusTitle.className = "text-sm font-black text-slate-400 tracking-widest mb-1 font-heavy-gothic";
+          votedResultNumber.className = "text-7xl sm:text-8xl font-black text-slate-400 tracking-tight py-2 font-heavy-gothic leading-none";
+
+          ticketBadge.className = "absolute -right-6 -top-6 w-20 h-20 bg-slate-400 rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px] font-heavy-gothic";
+          ticketBadge.textContent = "終了";
+          loseBanner.classList.remove('hidden');
+        }
+      }
     }
 
     async function fetchResults() {
@@ -344,6 +477,19 @@
       try {
         const response = await fetch(GAS_WEB_APP_URL);
         const data = await response.json();
+
+        // サーバー側の的中馬情報で更新
+        if (data.winningNumber !== undefined) {
+          currentWinningNumber = data.winningNumber;
+          localStorage.setItem(WINNING_KEY, currentWinningNumber);
+          adminWinningSelect.value = currentWinningNumber;
+
+          const savedVoted = localStorage.getItem(STORAGE_KEY);
+          if (savedVoted) {
+            applyWinningEffects(savedVoted, currentWinningNumber);
+          }
+        }
+
         renderResultsGraph(data);
         renderAdminData(data);
       } catch (err) {
@@ -364,25 +510,25 @@
         const count = counts[i] || 0;
         const percent = total > 0 ? Math.round((count / total) * 100) : 0;
         const isMyChoice = String(i) === String(myVoted);
+        const isWinningHorse = (i === currentWinningNumber);
 
         const row = document.createElement('div');
         row.className = 'space-y-1';
         row.innerHTML = `
           <div class="flex justify-between text-xs">
-            <span class="${isMyChoice ? 'text-amber-300 font-black' : 'text-slate-300'} font-heavy-gothic">
-              ${i}番馬 ${isMyChoice ? '★あなたの確定馬' : ''}
+            <span class="${isWinningHorse ? 'text-red-400 font-black' : (isMyChoice ? 'text-amber-300 font-black' : 'text-slate-300')} font-heavy-gothic">
+              ${i}番馬 ${isWinningHorse ? '🏆 1着 (的中馬)' : (isMyChoice ? '★あなたの投票' : '')}
             </span>
             <span class="text-emerald-200 font-mono">${count}票 (${percent}%)</span>
           </div>
           <div class="w-full h-2.5 bg-emerald-950 border border-emerald-800 rounded-full overflow-hidden flex">
-            <div class="h-full ${isMyChoice ? 'bg-amber-400' : 'bg-emerald-500'} transition-all duration-500" style="width: ${percent}%"></div>
+            <div class="h-full ${isWinningHorse ? 'bg-red-500' : (isMyChoice ? 'bg-amber-400' : 'bg-emerald-500')} transition-all duration-500" style="width: ${percent}%"></div>
           </div>
         `;
         resultsContainer.appendChild(row);
       }
     }
 
-    // 管理者モーダル内の集計リスト描画
     function renderAdminData(data) {
       const total = data.total || 0;
       const counts = data.counts || {};
@@ -393,11 +539,14 @@
       for (let i = 1; i <= TOTAL_OPTIONS; i++) {
         const count = counts[i] || 0;
         const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+        const isWinningHorse = (i === currentWinningNumber);
 
         const item = document.createElement('div');
-        item.className = 'flex items-center justify-between bg-white px-2.5 py-1.5 border rounded border-slate-200';
+        item.className = `flex items-center justify-between px-2.5 py-1.5 border rounded ${isWinningHorse ? 'bg-amber-100 border-amber-400' : 'bg-white border-slate-200'}`;
         item.innerHTML = `
-          <span class="font-bold text-slate-800 font-heavy-gothic">${i} 番馬</span>
+          <span class="font-bold text-slate-800 font-heavy-gothic">
+            ${i} 番馬 ${isWinningHorse ? '🏆 1着' : ''}
+          </span>
           <div class="flex items-center gap-2 font-mono text-slate-600">
             <span class="font-bold text-emerald-800">${count} 票</span>
             <span class="text-[10px] text-slate-400">(${percent}%)</span>
@@ -445,10 +594,11 @@
       btnSubmit.textContent = '投票確定（購入）';
     };
 
-    // 管理者モーダル
+    // 管理者モーダル制御
     btnOpenAdmin.onclick = () => {
       adminModal.classList.remove('hidden');
       if (!adminControls.classList.contains('hidden')) {
+        adminWinningSelect.value = currentWinningNumber;
         fetchResults();
       }
     };
@@ -459,6 +609,7 @@
       if (adminPassInput.value === ADMIN_PASS) {
         adminAuth.classList.add('hidden');
         adminControls.classList.remove('hidden');
+        adminWinningSelect.value = currentWinningNumber;
         fetchResults();
       } else {
         alert('パスワードが違います');
@@ -471,6 +622,44 @@
       updateClosedUI();
       renderOptions();
       alert(isClosed ? '投票を締め切りました。' : '投票受付を再開しました。');
+    };
+
+    // 的中馬確定処理
+    btnSaveWinning.onclick = async () => {
+      const selectedWin = parseInt(adminWinningSelect.value);
+      currentWinningNumber = selectedWin;
+      localStorage.setItem(WINNING_KEY, currentWinningNumber);
+
+      const savedVoted = localStorage.getItem(STORAGE_KEY);
+      if (savedVoted) {
+        applyWinningEffects(savedVoted, currentWinningNumber);
+      }
+
+      // GASへの保存処理
+      if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        btnSaveWinning.disabled = true;
+        btnSaveWinning.textContent = '更新中...';
+        try {
+          const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'setWinningNumber',
+              winningNumber: currentWinningNumber
+            })
+          });
+          const data = await response.json();
+          renderResultsGraph(data);
+          renderAdminData(data);
+        } catch (err) {
+          console.error(err);
+        }
+        btnSaveWinning.disabled = false;
+        btnSaveWinning.textContent = '確定・発表';
+      }
+
+      alert(selectedWin === 0 ? 'レース結果を未発表に戻しました。' : `${selectedWin}番馬を1着的中馬として発表しました！`);
     };
 
     btnRefreshAdminData.onclick = () => {
