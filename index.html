@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>投票アプリ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans antialiased">
+
+  <main class="flex-grow flex items-center justify-center p-4">
+    <div class="w-full max-w-lg">
+
+      <!-- STEP 1: 選択画面 -->
+      <section id="step-select" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl fade-in">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-center mb-2 text-indigo-400">投票してください</h1>
+        <p class="text-slate-400 text-center text-sm mb-6">1〜7の中から選択肢を1つ選んでください</p>
+        
+        <div id="options-container" class="grid grid-cols-1 gap-3 mb-8">
+          <!-- 1〜7の選択肢ボタンがJSで生成されます -->
+        </div>
+
+        <button id="btn-confirm" disabled class="w-full py-4 rounded-xl font-bold text-lg bg-slate-700 text-slate-500 cursor-not-allowed transition-all duration-200">
+          確認画面へ進む
+        </button>
+      </section>
+
+      <!-- STEP 2: 確認画面 -->
+      <section id="step-confirm" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl fade-in">
+        <h2 class="text-xl font-bold text-center mb-4 text-slate-300">投票内容の確認</h2>
+        <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-6 text-center mb-8">
+          <p class="text-slate-400 text-sm mb-1">選択中の項目</p>
+          <p id="confirm-target" class="text-3xl font-black text-indigo-400">◯番</p>
+        </div>
+        <p class="text-center text-sm text-slate-400 mb-6">この内容で投票を確定しますか？</p>
+        <div class="grid grid-cols-2 gap-4">
+          <button id="btn-back" class="w-full py-3.5 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 active:scale-95 transition">
+            やり直す
+          </button>
+          <button id="btn-submit" class="w-full py-3.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition text-white">
+            はい（確定）
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 3: 投票完了＋全体集計画面 -->
+      <section id="step-voted" class="hidden space-y-6 fade-in py-4">
+        <div class="text-center space-y-4">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full mb-1">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          
+          <!-- 大画面・画面いっぱいに表示されるメインテキスト -->
+          <div class="py-6 px-4 bg-slate-800/80 border border-slate-700/80 rounded-3xl backdrop-blur shadow-xl">
+            <h2 id="voted-result-text" class="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-sky-300 to-emerald-400 leading-tight">
+              あなたは◯番に<br class="sm:hidden">投票しました
+            </h2>
+          </div>
+        </div>
+
+        <!-- リアルタイム集計結果グラフ -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-700/80 pb-3">
+            <h3 class="font-bold text-slate-200">現在の投票結果</h3>
+            <span id="total-votes-count" class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2.5 py-1 rounded-full font-medium">
+              総投票数: -- 票
+            </span>
+          </div>
+
+          <div id="results-container" class="space-y-3">
+            <p class="text-center text-slate-500 text-sm py-4">最新結果を読み込み中...</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- デモ用リセットエリア -->
+  <footer class="p-4 text-center border-t border-slate-800/50">
+    <button id="btn-reset" class="text-xs text-slate-500 hover:text-rose-400 underline transition">
+      [デモ用] 端末の投票履歴をクリア
+    </button>
+  </footer>
+
+  <script>
+    // ★ここにGoogle Apps Scriptで発行されたウェブアプリのURLを貼り付けてください
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxVxPNLs6R7F3BcCNAqPNnrw0prwPCORbLWu_6-jaM/dev";
+
+    const TOTAL_OPTIONS = 7;
+    const STORAGE_KEY = 'voted_option_id';
+
+    let selectedOption = null;
+
+    const elSelect = document.getElementById('step-select');
+    const elConfirm = document.getElementById('step-confirm');
+    const elVoted = document.getElementById('step-voted');
+    
+    const optionsContainer = document.getElementById('options-container');
+    const btnConfirm = document.getElementById('btn-confirm');
+    const btnBack = document.getElementById('btn-back');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnReset = document.getElementById('btn-reset');
+    
+    const confirmTarget = document.getElementById('confirm-target');
+    const votedResultText = document.getElementById('voted-result-text');
+    const resultsContainer = document.getElementById('results-container');
+    const totalVotesCount = document.getElementById('total-votes-count');
+
+    function init() {
+      renderOptions();
+      checkVotedStatus();
+    }
+
+    function renderOptions() {
+      optionsContainer.innerHTML = '';
+      for (let i = 1; i <= TOTAL_OPTIONS; i++) {
+        const btn = document.createElement('button');
+        btn.className = `option-btn w-full p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-left font-bold flex items-center justify-between transition-all duration-150`;
+        btn.innerHTML = `
+          <span class="text-slate-200">${i} 番の選択肢</span>
+          <span class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center radio-dot">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 opacity-0 transition-opacity"></span>
+          </span>
+        `;
+        btn.onclick = () => selectOption(i, btn);
+        optionsContainer.appendChild(btn);
+      }
+    }
+
+    function selectOption(id, element) {
+      selectedOption = id;
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('border-indigo-500', 'bg-indigo-950/30');
+        btn.querySelector('.radio-dot span').classList.add('opacity-0');
+      });
+      element.classList.add('border-indigo-500', 'bg-indigo-950/30');
+      element.querySelector('.radio-dot span').classList.remove('opacity-0');
+
+      btnConfirm.disabled = false;
+      btnConfirm.className = "w-full py-4 rounded-xl font-bold text-lg bg-indigo-600 hover:bg-indigo-500 text-white active:scale-[0.99] transition-all duration-200 cursor-pointer shadow-lg shadow-indigo-600/20";
+    }
+
+    function checkVotedStatus() {
+      const savedVoted = localStorage.getItem(STORAGE_KEY);
+      if (savedVoted) {
+        showVotedScreen(savedVoted);
+        fetchResults();
+      } else {
+        showStep(elSelect);
+      }
+    }
+
+    function showStep(target) {
+      [elSelect, elConfirm, elVoted].forEach(el => el.classList.add('hidden'));
+      target.classList.remove('hidden');
+    }
+
+    function showVotedScreen(optionId) {
+      votedResultText.innerHTML = `あなたは <span class="text-indigo-400 font-black">${optionId}番</span> に<br class="sm:hidden">投票しました`;
+      showStep(elVoted);
+    }
+
+    // Googleシートから最新の集計結果を取得して表示
+    async function fetchResults() {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        resultsContainer.innerHTML = `<p class="text-rose-400 text-xs text-center py-2">GASのURLが設定されていません</p>`;
+        return;
+      }
+
+      try {
+        const response = await fetch(GAS_WEB_APP_URL);
+        const data = await response.json();
+        renderResultsGraph(data);
+      } catch (err) {
+        console.error(err);
+        resultsContainer.innerHTML = `<p class="text-rose-400 text-xs text-center py-2">集計データの取得に失敗しました</p>`;
+      }
+    }
+
+    // 結果バーグラフ描画
+    function renderResultsGraph(data) {
+      const total = data.total || 0;
+      const counts = data.counts || {};
+      const myVoted = localStorage.getItem(STORAGE_KEY);
+
+      totalVotesCount.textContent = `総投票数: ${total} 票`;
+      resultsContainer.innerHTML = '';
+
+      for (let i = 1; i <= TOTAL_OPTIONS; i++) {
+        const count = counts[i] || 0;
+        const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+        const isMyChoice = String(i) === String(myVoted);
+
+        const row = document.createElement('div');
+        row.className = 'space-y-1';
+        row.innerHTML = `
+          <div class="flex justify-between text-xs font-medium">
+            <span class="${isMyChoice ? 'text-indigo-300 font-bold' : 'text-slate-400'}">
+              ${i}番 ${isMyChoice ? '★あなたの投票' : ''}
+            </span>
+            <span class="text-slate-400">${count}票 (${percent}%)</span>
+          </div>
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden flex">
+            <div class="h-full ${isMyChoice ? 'bg-indigo-500' : 'bg-slate-600'} transition-all duration-500" style="width: ${percent}%"></div>
+          </div>
+        `;
+        resultsContainer.appendChild(row);
+      }
+    }
+
+    btnConfirm.onclick = () => {
+      if (!selectedOption) return;
+      confirmTarget.textContent = `${selectedOption} 番`;
+      showStep(elConfirm);
+    };
+
+    btnBack.onclick = () => {
+      showStep(elSelect);
+    };
+
+    btnSubmit.onclick = async () => {
+      if (!selectedOption) return;
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = '送信中...';
+
+      localStorage.setItem(STORAGE_KEY, selectedOption);
+      showVotedScreen(selectedOption);
+
+      if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        try {
+          // POSTで投票データを送信
+          const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ option: selectedOption })
+          });
+          const data = await response.json();
+          renderResultsGraph(data);
+        } catch (err) {
+          console.error(err);
+          // POSTエラー時はGETで再試行
+          fetchResults();
+        }
+      }
+
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'はい（確定）';
+    };
+
+    btnReset.onclick = () => {
+      if (confirm('端末の投票履歴をクリアして最初の画面に戻しますか？\n（※Googleシート側の全体集計データは消去されません）')) {
+        localStorage.removeItem(STORAGE_KEY);
+        selectedOption = null;
+        btnConfirm.disabled = true;
+        btnConfirm.className = "w-full py-4 rounded-xl font-bold text-lg bg-slate-700 text-slate-500 cursor-not-allowed transition-all duration-200";
+        renderOptions();
+        showStep(elSelect);
+      }
+    };
+
+    init();
+  </script>
+</body>
+</html>
