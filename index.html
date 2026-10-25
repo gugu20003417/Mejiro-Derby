@@ -317,18 +317,7 @@
 
       <div id="admin-controls" class="hidden space-y-5">
         
-        <!-- 1. 審議中切り替えスイッチ -->
-        <div class="p-3.5 bg-blue-50 border border-blue-300 rounded-xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-blue-900 font-heavy-gothic">⚖️ 審議中ステータス</span>
-            <span id="admin-deliberating-text" class="text-xs font-black text-slate-500">解除中</span>
-          </div>
-          <button id="btn-toggle-deliberative" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg text-xs transition font-heavy-gothic shadow">
-            ⚖️ 審議中画面を表示する
-          </button>
-        </div>
-
-        <!-- 2. 締め切りスイッチ -->
+        <!-- 1. 締め切りスイッチ（上部に移動） -->
         <div class="p-3.5 bg-slate-100 rounded-xl space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-500">現在の投票状況</span>
@@ -336,6 +325,17 @@
           </div>
           <button id="btn-toggle-close" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg text-xs transition font-heavy-gothic shadow">
             🔒 投票を締め切る
+          </button>
+        </div>
+
+        <!-- 2. 審議中切り替えスイッチ（下部に移動） -->
+        <div class="p-3.5 bg-blue-50 border border-blue-300 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-blue-900 font-heavy-gothic">⚖️ 審議中ステータス</span>
+            <span id="admin-deliberating-text" class="text-xs font-black text-slate-500">解除中</span>
+          </div>
+          <button id="btn-toggle-deliberative" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg text-xs transition font-heavy-gothic shadow">
+            ⚖️ 審議中画面を表示する
           </button>
         </div>
 
@@ -413,7 +413,7 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWj3z-HwAfIrs6uhPiPCR3iyKcvU9p84CF8mw0O6xZHwIHhUyWFagJXSaNdMBfxvqR/exec";
+    const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL_HERE";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY_TYPE = 'voted_ticket_type';
