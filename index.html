@@ -126,7 +126,7 @@
               単勝
             </button>
             <button id="tab-type-renfuku" class="py-2 rounded-lg font-bold text-xs text-emerald-900 hover:bg-emerald-100 transition font-heavy-gothic">
-              連勝複式
+              馬連
             </button>
             <button id="tab-type-sanrentan" class="py-2 rounded-lg font-bold text-xs text-emerald-900 hover:bg-emerald-100 transition font-heavy-gothic">
               3連単
@@ -141,19 +141,19 @@
               <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded font-normal">単勝</span>
               1着馬を1頭選択
             </h2>
-            <p class="text-[11px] text-slate-500 mt-1 font-bold">※単勝を発券すると連勝複式・3連単は購入できません</p>
+            <p class="text-[11px] text-slate-500 mt-1 font-bold">※単勝を発券すると馬連・3連単は購入できません</p>
           </div>
           <div id="tansho-options-container" class="grid grid-cols-1 gap-2.5 mb-6"></div>
         </div>
 
-        <!-- 2. 連勝複式フォーム -->
+        <!-- 2. 馬連フォーム -->
         <div id="form-renfuku" class="hidden space-y-4">
           <div class="pb-2 border-b border-emerald-200">
             <h2 class="text-base font-black text-brand-green flex items-center gap-2 font-heavy-gothic">
-              <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded font-normal">連勝複式</span>
+              <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded font-normal">馬連</span>
               1着・2着に入る2頭を選択
             </h2>
-            <p class="text-[11px] text-slate-500 mt-1 font-bold">※連勝複式を発券すると単勝・3連単は購入できません（着順不同・重複不可）</p>
+            <p class="text-[11px] text-slate-500 mt-1 font-bold">※馬連を発券すると単勝・3連単は購入できません（着順不同・重複不可）</p>
           </div>
           
           <div>
@@ -178,7 +178,7 @@
               <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded font-normal">3連単</span>
               1着・2着・3着の馬番をそれぞれ選択
             </h2>
-            <p class="text-[11px] text-slate-500 mt-1 font-bold">※3連単を発券すると単勝・連勝複式は購入できません（着順通り・重複不可）</p>
+            <p class="text-[11px] text-slate-500 mt-1 font-bold">※3連単を発券すると単勝・馬連は購入できません（着順通り・重複不可）</p>
           </div>
           
           <div>
@@ -736,7 +736,7 @@
     }
 
     function showVotedScreen(type, optionId) {
-      const typeNames = { tansho: '単勝', renfuku: '連勝複式', sanrentan: '3連単' };
+      const typeNames = { tansho: '単勝', renfuku: '馬連', sanrentan: '3連単' };
       votedTicketTypeTitle.textContent = `めじろダービー ${typeNames[type]}馬券`;
       votedResultNumber.textContent = (type === 'tansho') ? `${optionId}番` : `${optionId}`;
       applyTicketResultStyle(type, optionId);
@@ -938,7 +938,7 @@
 
     btnConfirm.onclick = () => {
       if (!selectedOption || isClosed) return;
-      const typeNames = { tansho: '単勝馬券', renfuku: '連勝複式馬券', sanrentan: '3連単馬券' };
+      const typeNames = { tansho: '単勝馬券', renfuku: '馬連馬券', sanrentan: '3連単馬券' };
       confirmTicketTypeName.textContent = typeNames[currentTicketType];
       confirmTarget.textContent = (currentTicketType === 'tansho') ? `${selectedOption} 番` : `${selectedOption}`;
       showStep(elConfirm);
