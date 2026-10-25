@@ -207,7 +207,7 @@
 
       <!-- ログイン領域 -->
       <div id="admin-auth" class="space-y-3">
-        <p class="text-xs text-slate-600">管理パスワードを入力してください</p>
+        <p class="text-xs text-slate-600">管理パスワードを入力してください（初期: admin123）</p>
         <input type="password" id="admin-pass" placeholder="パスワード" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-600">
         <button id="btn-admin-login" class="w-full py-2 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 font-heavy-gothic">ログイン</button>
       </div>
@@ -215,14 +215,6 @@
       <!-- 管理メニュー領域 -->
       <div id="admin-controls" class="hidden space-y-5">
         
-        <!-- ★追加: この端末の投票履歴削除ボタン -->
-        <div class="p-3 bg-red-50 border border-red-200 rounded-xl space-y-2">
-          <label class="block text-xs font-black text-red-900 font-heavy-gothic">⚠️ 端末操作（やり直し用）</label>
-          <button id="btn-reset-device-vote" class="w-full py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black rounded-lg text-xs transition font-heavy-gothic shadow">
-            🗑️ この端末の投票履歴を削除（初期化）
-          </button>
-        </div>
-
         <!-- 1. 締め切りスイッチ -->
         <div class="p-3.5 bg-slate-100 rounded-xl space-y-2">
           <div class="flex items-center justify-between">
@@ -272,16 +264,26 @@
           </button>
         </div>
 
-        <!-- 4. パスワード変更機能 -->
-        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
+        <!-- ★位置移動: この端末の投票履歴削除ボタン（投票状況の下へ配置） -->
+        <div class="p-3 bg-red-50 border border-red-200 rounded-xl space-y-2">
+          <label class="block text-xs font-black text-red-900 font-heavy-gothic">⚠️ 端末操作（やり直し用）</label>
+          <button id="btn-reset-device-vote" class="w-full py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black rounded-lg text-xs transition font-heavy-gothic shadow">
+            🗑️ この端末の投票履歴を削除（初期化）
+          </button>
+        </div>
+
+        <!-- 4. パスワード変更機能（旧パスワード入力欄の追加） -->
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2.5">
           <h4 class="text-xs font-black text-slate-800 font-heavy-gothic">🔑 管理用パスワードの変更</h4>
-          <div class="flex gap-2">
-            <input type="password" id="input-new-pass" placeholder="新しいパスワード" class="flex-grow px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none">
-            <button id="btn-change-pass" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded text-xs font-heavy-gothic whitespace-nowrap">
-              変更保存
+          <div class="space-y-2">
+            <input type="password" id="input-old-pass" placeholder="現在のパスワード" class="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none">
+            <input type="password" id="input-new-pass" placeholder="新しいパスワード" class="w-full px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none">
+            <button id="btn-change-pass" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded text-xs font-heavy-gothic">
+              パスワード変更の保存
             </button>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -292,7 +294,7 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3LcwOBzvPatiNDQFGj-9fwApp26vofxPGsKPYLU5j4vhM_7662jTJBukLpzTnLKZ9/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyBngxgXHHu2fZrAoXq6uSw4IL3Axjq0WjQHWihrUkpq5d0EujyJT-uVsy2nkQJooy4/exec";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY = 'voted_option_id';
@@ -344,6 +346,7 @@
     const adminTotalVotes = document.getElementById('admin-total-votes');
     const adminVotesList = document.getElementById('admin-votes-list');
     const btnRefreshAdminData = document.getElementById('btn-refresh-admin-data');
+    const inputOldPass = document.getElementById('input-old-pass');
     const inputNewPass = document.getElementById('input-new-pass');
     const btnChangePass = document.getElementById('btn-change-pass');
     const btnResetDeviceVote = document.getElementById('btn-reset-device-vote');
@@ -567,7 +570,7 @@
       }
     }
 
-    // ★追加機能: 管理者画面からの端末投票履歴クリア
+    // 端末投票履歴削除ボタン
     btnResetDeviceVote.onclick = () => {
       if (confirm('この端末の投票履歴および景品引換記録を削除して、未投票の初期状態に戻しますか？')) {
         localStorage.removeItem(STORAGE_KEY);
@@ -710,32 +713,42 @@
       btnSetWinner.textContent = '結果確定';
     };
 
+    // ★旧パスワード検証付きのパスワード変更処理
     btnChangePass.onclick = async () => {
+      const oldPass = inputOldPass.value.trim();
       const newPass = inputNewPass.value.trim();
-      if (!newPass) {
-        alert('新しいパスワードを入力してください');
+
+      if (!oldPass || !newPass) {
+        alert('現在のパスワードと新しいパスワードの両方を入力してください');
         return;
       }
 
       btnChangePass.disabled = true;
-      btnChangePass.textContent = '保存中...';
+      btnChangePass.textContent = '変更中...';
 
       try {
-        await fetch(GAS_WEB_APP_URL, {
+        const response = await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
           mode: 'cors',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'changeAdminPassword', newPassword: newPass })
+          body: JSON.stringify({ action: 'changeAdminPassword', oldPassword: oldPass, newPassword: newPass })
         });
-        alert(`パスワードを「 ${newPass} 」に変更しました！`);
-        inputNewPass.value = '';
+        const res = await response.json();
+
+        if (res.success) {
+          alert(`パスワードを変更しました！`);
+          inputOldPass.value = '';
+          inputNewPass.value = '';
+        } else {
+          alert(res.message || '現在のパスワードが間違っています');
+        }
       } catch (e) {
         console.error(e);
         alert('パスワード変更に失敗しました');
       }
 
       btnChangePass.disabled = false;
-      btnChangePass.textContent = '変更保存';
+      btnChangePass.textContent = 'パスワード変更の保存';
     };
 
     btnRefreshAdminData.onclick = () => {
