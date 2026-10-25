@@ -1,550 +1,415 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>めじろダービー 馬券＆推し馬投票アプリ</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        deepGreen: '#00734D',
-                        deepGreenDark: '#005538',
-                        goldAccent: '#D4AF37',
-                        goldLight: '#F9F1D8',
-                    },
-                    fontFamily: {
-                        mincho: ['"Shippori Mincho"', 'serif'],
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
-        .header-bg {
-            background-color: #00734D;
-            background-image: radial-gradient(circle at 50% 30%, #008f60 0%, #00734D 70%, #005035 100%);
-        }
-        .text-outline-white {
-            text-shadow: 
-                -1px -1px 0 #fff,  
-                 1px -1px 0 #fff,
-                -1px  1px 0 #fff,
-                 1px  1px 0 #fff,
-                 0px  2px 4px rgba(0,0,0,0.3);
-        }
-        .gold-border {
-            border-color: #D4AF37;
-        }
-        .gold-badge {
-            background: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7);
-            color: #3d2b00;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>めじろダービー馬券アプリ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --brand-green: #00734D;
+      --brand-green-dark: #004d33;
+      --brand-green-light: #009966;
+    }
+    .bg-brand-green { background-color: var(--brand-green); }
+    .bg-brand-dark { background-color: var(--brand-green-dark); }
+    .border-brand-green { border-color: var(--brand-green); }
+    .text-brand-green { color: var(--brand-green); }
+
+    .fade-in { animation: fadeIn 0.25s ease-in-out forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 白抜きタイトル */
+    .title-white-outline {
+      color: #ffffff;
+      text-shadow: 
+        -2px -2px 0 var(--brand-green-dark),  
+         2px -2px 0 var(--brand-green-dark),
+        -2px  2px 0 var(--brand-green-dark),
+         2px  2px 0 var(--brand-green-dark),
+         0px  3px 6px rgba(0,0,0,0.4);
+    }
+  </style>
 </head>
-<body class="font-sans antialiased min-h-screen flex flex-col justify-between">
+<body class="bg-brand-green text-slate-800 min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-emerald-200">
 
-    <!-- ヘッダー -->
-    <header class="header-bg text-white shadow-lg relative border-b-4 border-goldAccent">
-        <div class="max-w-4xl mx-auto px-4 py-6 text-center relative">
-            <button onclick="openAdminModal()" class="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition" title="管理者設定">
-                <i class="fa-solid fa-lock text-lg"></i>
-            </button>
-            
-            <p class="text-xs sm:text-sm tracking-widest text-goldLight font-bold mb-1">第72回 めじろダービー (GI)</p>
-            <h1 class="text-3xl sm:text-5xl font-extrabold font-mincho text-deepGreen text-outline-white tracking-wide py-1">
-                MEJIRO DERBY
-            </h1>
-            <p class="text-xs sm:text-sm text-emerald-100 mt-2 font-medium">公式 1着予想馬券 ＆ 推し馬投票システム</p>
-        </div>
-    </header>
-
-    <!-- 投票ステータスバー -->
-    <div id="statusBanner" class="bg-emerald-800 text-white py-2.5 px-4 text-center font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-inner">
-        <span class="inline-block w-3 h-3 rounded-full bg-green-400 animate-pulse" id="statusDot"></span>
-        <span id="statusText">ただいま投票受付中</span>
+  <!-- ヘッダー -->
+  <header class="bg-brand-dark border-b-4 border-emerald-950 shadow-xl py-4 px-4 text-center relative">
+    <div class="max-w-lg mx-auto flex items-center justify-center gap-2">
+      <span class="text-2xl drop-shadow">🏇</span>
+      <h1 class="text-2xl sm:text-3xl font-black tracking-wider title-white-outline">
+        めじろダービー馬券アプリ
+      </h1>
+      <span class="text-2xl drop-shadow">🏇</span>
     </div>
+    
+    <!-- 管理者パネル開くボタン -->
+    <button id="btn-open-admin" class="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 text-xs font-bold flex items-center gap-1 bg-black/20 hover:bg-black/40 rounded-lg transition">
+      ⚙️ 管理
+    </button>
+  </header>
 
-    <!-- メインコンテンツ -->
-    <main class="max-w-4xl mx-auto px-4 py-6 w-full flex-grow space-y-8">
+  <main class="flex-grow flex items-center justify-center p-4">
+    <div class="w-full max-w-lg">
 
-        <!-- 投票モード切り替えタブ -->
-        <div class="flex rounded-lg bg-gray-200 p-1 shadow-inner max-w-md mx-auto">
-            <button id="tabWin" onclick="switchTab('win')" class="flex-1 py-2 text-sm sm:text-base font-bold rounded-md transition shadow bg-deepGreen text-white">
-                <i class="fa-solid fa-trophy mr-1"></i> 1着予想馬券
-            </button>
-            <button id="tabFav" onclick="switchTab('fav')" class="flex-1 py-2 text-sm sm:text-base font-bold rounded-md transition text-gray-700 hover:text-deepGreen">
-                <i class="fa-solid fa-heart mr-1"></i> 推し馬投票
-            </button>
+      <!-- 締め切り時アナウンスバナー -->
+      <div id="closed-banner" class="hidden mb-4 p-4 bg-amber-100 border-2 border-amber-500 rounded-xl text-amber-900 text-center font-black text-sm shadow-lg">
+        🚨 現在、投票の受け付けは終了（締め切り）しました。
+      </div>
+
+      <!-- STEP 1: マークシート（選択画面） -->
+      <section id="step-select" class="bg-emerald-50 border-4 border-emerald-200 rounded-2xl p-5 sm:p-7 shadow-2xl fade-in relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg tracking-widest uppercase">
+          マークカード
         </div>
 
-        <!-- 案内カード -->
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-emerald-100">
-            <h2 id="sectionTitle" class="text-xl font-bold text-deepGreen font-mincho border-b pb-2 mb-3 flex items-center">
-                <i class="fa-solid fa-ticket text-goldAccent mr-2"></i> 単勝予想馬券の購入・投票
+        <div class="border-b-2 border-dashed border-emerald-300 pb-3 mb-5">
+          <h2 class="text-lg font-black text-brand-green flex items-center gap-2">
+            <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded">1着予想</span>
+            投票する馬番を選択
+          </h2>
+          <p class="text-slate-600 text-xs mt-1">1〜7枠の中から本命馬を1頭だけ塗りつぶしてください</p>
+        </div>
+        
+        <div id="options-container" class="grid grid-cols-1 gap-2.5 mb-6">
+          <!-- JSでボタン作成 -->
+        </div>
+
+        <button id="btn-confirm" disabled class="w-full py-3.5 rounded-xl font-black text-base bg-slate-300 text-slate-500 cursor-not-allowed transition-all duration-150 border-b-4 border-slate-400">
+          発券確認画面へ
+        </button>
+      </section>
+
+      <!-- STEP 2: 確認画面（発券確認） -->
+      <section id="step-confirm" class="hidden bg-emerald-50 border-4 border-emerald-200 rounded-2xl p-5 sm:p-7 shadow-2xl fade-in">
+        <div class="text-center mb-4">
+          <span class="inline-block bg-emerald-200 text-emerald-950 text-xs font-bold px-3 py-1 rounded-full mb-1">発券前確認</span>
+          <h2 class="text-xl font-black text-slate-900">買い目の確認</h2>
+        </div>
+
+        <div class="bg-white border-2 border-slate-900 rounded-lg p-5 shadow-inner mb-6 relative">
+          <div class="text-[10px] text-slate-400 font-mono flex justify-between border-b pb-1 mb-3">
+            <span>MEJIRO DERBY</span>
+            <span>単勝馬券</span>
+          </div>
+          <p class="text-slate-500 text-xs mb-1">選択馬番</p>
+          <p id="confirm-target" class="text-4xl font-black text-brand-green text-center py-2 border-y-2 border-emerald-800 my-2">
+            ◯ 番
+          </p>
+          <p class="text-center text-xs text-slate-500 font-bold mt-2">この馬券を購入（投票）しますか？</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button id="btn-back" class="w-full py-3 rounded-xl font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 active:scale-95 transition border-b-4 border-slate-300">
+            塗りなおす
+          </button>
+          <button id="btn-submit" class="w-full py-3 rounded-xl font-black bg-brand-green hover:bg-emerald-600 active:scale-95 transition text-white border-b-4 border-emerald-900">
+            投票確定（購入）
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 3: 馬券風 投票完了・オッズ（集計）画面 -->
+      <section id="step-voted" class="hidden space-y-5 fade-in py-2">
+        
+        <!-- 発行済み馬券カード（画面いっぱいに強調） -->
+        <div class="bg-emerald-50 border-4 border-emerald-200 rounded-xl p-5 shadow-2xl relative overflow-hidden">
+          <div class="absolute -right-6 -top-6 w-20 h-20 bg-brand-green rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px]">
+            済
+          </div>
+
+          <div class="border-b-2 border-slate-800 pb-2 mb-3 flex justify-between items-baseline">
+            <span class="font-black text-lg text-brand-green">めじろダービー 投票券</span>
+            <span class="text-xs font-mono font-bold text-slate-500">投票完了</span>
+          </div>
+
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-6 text-center my-3 shadow-inner">
+            <p class="text-xs font-bold text-slate-500 mb-1">あなたの本命馬</p>
+            <h2 id="voted-result-text" class="text-3xl sm:text-5xl font-black text-brand-green leading-tight">
+              あなたは◯番に<br class="sm:hidden">投票しました
             </h2>
-            <p id="sectionDesc" class="text-sm text-gray-600 leading-relaxed">
-                優勝すると思われる競走馬を選択し投票してください。予想的中者には景品をプレゼント！
-            </p>
+          </div>
+
+          <div class="text-[10px] text-slate-500 font-mono text-right">
+            端末認証ID: LOCAL-DEVICE-VOTED
+          </div>
         </div>
 
-        <!-- 出走馬リスト & 投票フォーム -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div class="bg-deepGreen text-white px-4 py-3 font-bold flex justify-between items-center text-sm sm:text-base">
-                <span><i class="fa-solid fa-horse mr-1"></i> 出走表</span>
-                <span id="votedBadge" class="hidden gold-badge px-2.5 py-0.5 rounded-full text-xs font-bold">
-                    <i class="fa-solid fa-check mr-1"></i> 投票完了
-                </span>
-            </div>
+        <!-- 全体オッズ（投票分布） -->
+        <div class="bg-brand-dark border-2 border-emerald-700 rounded-xl p-5 text-white shadow-xl space-y-3">
+          <div class="flex items-center justify-between border-b border-emerald-800 pb-2">
+            <h3 class="font-black text-amber-300 text-sm flex items-center gap-1">
+              <span>📊</span> 全体オッズ（投票分布）
+            </h3>
+            <span id="total-votes-count" class="text-[11px] bg-emerald-950 border border-emerald-700 text-emerald-200 px-2.5 py-0.5 rounded-full font-mono">
+              総投票数: -- 票
+            </span>
+          </div>
 
-            <!-- 馬一覧 -->
-            <div id="horseList" class="divide-y divide-gray-200">
-                <!-- JavaScriptで出走馬を動的にレンダリング -->
-            </div>
+          <div id="results-container" class="space-y-2">
+            <p class="text-center text-emerald-300 text-xs py-4">最新オッズを計算中...</p>
+          </div>
         </div>
+      </section>
 
-        <!-- 投票実行ボタンエリア -->
-        <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200 text-center space-y-3">
-            <div id="selectionSummary" class="text-sm font-semibold text-gray-500">
-                馬を選択してください
-            </div>
-            
-            <button id="submitVoteBtn" onclick="submitVote()" disabled class="w-full sm:w-2/3 py-3.5 px-6 rounded-xl text-white font-bold text-lg shadow-md transition duration-200 bg-gray-400 cursor-not-allowed">
-                選択してください
-            </button>
-            
-            <p id="closedNotice" class="hidden text-red-600 text-sm font-bold pt-1">
-                <i class="fa-solid fa-circle-exclamation mr-1"></i> 現在、投票受付は終了しております。
-            </p>
-        </div>
-
-        <!-- 現在の投票集計・リアルタイム結果（オプション表示） -->
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="font-bold text-gray-700 text-sm sm:text-base flex items-center">
-                    <i class="fa-solid fa-chart-pie text-deepGreen mr-2"></i> リアルタイム投票状況
-                </h3>
-                <button onclick="updateStatsUI()" class="text-xs text-deepGreen hover:underline">
-                    <i class="fa-solid fa-rotate mr-1"></i>更新
-                </button>
-            </div>
-            <div id="statsContainer" class="space-y-2">
-                <!-- 集計結果プログレスバー -->
-            </div>
-        </div>
-
-    </main>
-
-    <!-- フッター -->
-    <footer class="bg-gray-800 text-gray-400 text-xs py-6 text-center border-t border-gray-700 mt-8">
-        <div class="max-w-4xl mx-auto px-4 space-y-2">
-            <p>© めじろダービー実行委員会 All Rights Reserved.</p>
-            <p>
-                <button onclick="openAdminModal()" class="underline hover:text-white transition">
-                    <i class="fa-solid fa-user-shield mr-1"></i>管理者コントロールパネル
-                </button>
-            </p>
-        </div>
-    </footer>
-
-    <!-- 管理者コントロールパネル モーダル -->
-    <div id="adminModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
-            <!-- モーダルヘッダー -->
-            <div class="bg-deepGreen text-white px-6 py-4 flex justify-between items-center">
-                <h3 class="font-bold font-mincho text-lg flex items-center">
-                    <i class="fa-solid fa-sliders mr-2 text-goldAccent"></i> 管理者コントロールパネル
-                </h3>
-                <button onclick="closeAdminModal()" class="text-white/80 hover:text-white text-xl">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <!-- モーダル本体 -->
-            <div class="p-6 space-y-6">
-
-                <!-- パスワード認証ブロック -->
-                <div id="adminAuthBlock" class="space-y-3">
-                    <p class="text-sm text-gray-600">管理操作には認証が必要です。（初期パスワード: <code class="bg-gray-100 px-1 py-0.5 rounded text-red-600">admin123</code>）</p>
-                    <div>
-                        <input type="password" id="adminPassInput" placeholder="パスワードを入力" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-deepGreen">
-                    </div>
-                    <button onclick="authenticateAdmin()" class="w-full bg-deepGreen hover:bg-deepGreenDark text-white font-bold py-2.5 rounded-lg text-sm transition">
-                        ログイン
-                    </button>
-                </div>
-
-                <!-- 管理操作エリア（初期は非表示） -->
-                <div id="adminControls" class="hidden space-y-6">
-                    <!-- ステータス切替 -->
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">投票受付ステータス</label>
-                        <div class="flex items-center justify-between">
-                            <span id="adminStatusLabel" class="font-bold text-green-600 text-sm">
-                                <i class="fa-solid fa-circle text-xs mr-1"></i> 投票受付中
-                            </span>
-                            <button id="toggleStatusBtn" onclick="toggleVotingStatus()" class="px-4 py-2 rounded-lg font-bold text-sm shadow transition bg-red-600 hover:bg-red-700 text-white">
-                                締め切る
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- GAS (Google Apps Script) 連携設定 -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">GAS Web API URL (オプション)</label>
-                        <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycbw7u0eK6JR3XNcJvFm9pAd7CcqWrgWB56PGTjZie4LK9mKGUC0TDP-gCyq_yk2sp96U/exec" class="w-full border rounded-lg p-2.5 text-xs font-mono focus:outline-none focus:border-deepGreen">
-                        <p class="text-xs text-gray-400">※設定するとスプレッドシートへのリアルタイム送信が行われます。</p>
-                    </div>
-
-                    <!-- 投票リセット -->
-                    <div class="pt-4 border-t border-gray-200 flex justify-between items-center">
-                        <div>
-                            <p class="text-xs font-bold text-gray-700">ローカル投票データの削除</p>
-                            <p class="text-xs text-gray-400">端末の投票履歴をクリアします</p>
-                        </div>
-                        <button onclick="clearLocalVotes()" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded-lg transition">
-                            クリア
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- モーダル フッター -->
-            <div class="bg-gray-100 px-6 py-3 border-t border-gray-200 text-right">
-                <button onclick="closeAdminModal()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-xs font-bold rounded-lg transition">
-                    閉じる
-                </button>
-            </div>
-        </div>
     </div>
+  </main>
 
-    <!-- JavaScript アプリケーションロジック -->
-    <script>
-        // 出走馬データ定義
-        const HORSES = [
-            { id: 1, gate: 1, name: "メジロマックイーン", jockey: "武 豊", odds: "2.1", color: "bg-white text-gray-800 border-gray-300" },
-            { id: 2, gate: 2, name: "メジロライアン", jockey: "横山 典弘", odds: "3.4", color: "bg-black text-white" },
-            { id: 3, gate: 3, name: "メジロパーマー", jockey: "山田 泰誠", odds: "8.7", color: "bg-red-600 text-white" },
-            { id: 4, gate: 4, name: "メジロドーベル", jockey: "吉田 豊", odds: "4.5", color: "bg-blue-600 text-white" },
-            { id: 5, gate: 5, name: "メジロブライト", jockey: "河内 洋", odds: "5.2", color: "bg-yellow-400 text-black" },
-            { id: 6, gate: 6, name: "メジロラモーヌ", jockey: "河内 洋", odds: "6.0", color: "bg-green-600 text-white" },
-        ];
+  <!-- 管理者設定モーダル -->
+  <div id="admin-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white border-4 border-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+      <button id="btn-close-admin" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      
+      <h3 class="text-lg font-black text-slate-900 border-b pb-2 mb-4 flex items-center gap-2">
+        ⚙️ 管理者コントロール
+      </h3>
 
-        // アプリケーション状態管理
-        let currentTab = 'win'; // 'win' (1着予想) or 'fav' (推し馬)
-        let selectedHorseId = null;
-        let isVotingOpen = true; // 投票可否フラグ
-        let isAdminLoggedIn = false;
-        let gasApiUrl = "";
+      <div id="admin-auth" class="space-y-3">
+        <p class="text-xs text-slate-600">管理パスワードを入力してください（初期: admin123）</p>
+        <input type="password" id="admin-pass" placeholder="パスワード" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-600">
+        <button id="btn-admin-login" class="w-full py-2 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800">ログイン</button>
+      </div>
 
-        // 初期化処理
-        window.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            renderHorseList();
-            updateStatusUI();
-            updateStatsUI();
-        });
+      <div id="admin-controls" class="hidden space-y-4">
+        <div class="p-3 bg-slate-100 rounded-lg space-y-1">
+          <p class="text-xs font-bold text-slate-500">現在のステータス</p>
+          <p id="admin-status-text" class="text-base font-black text-emerald-700">🟢 投票受付中</p>
+        </div>
 
-        // LocalStorageから設定をロード
-        function loadSettings() {
-            const savedStatus = localStorage.getItem('mejiro_voting_open');
-            if (savedStatus !== null) {
-                isVotingOpen = JSON.parse(savedStatus);
-            }
-            gasApiUrl = localStorage.getItem('mejiro_gas_url') || "";
-            document.getElementById('gasUrlInput').value = gasApiUrl;
+        <button id="btn-toggle-close" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-xl text-sm transition">
+          🔒 投票を締め切る
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="p-3 text-center border-t border-emerald-950 bg-brand-dark">
+    <p class="text-[11px] text-emerald-200 font-mono">© めじろダービー 投票システム</p>
+  </footer>
+
+  <script>
+    // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz-9P1ZRIuewoydI20dToCO-E_5mgVYgeeX0sbpY81k0grPr2FI3jUSUtMNkfrEiZGy/exec";
+
+    const TOTAL_OPTIONS = 7;
+    const STORAGE_KEY = 'voted_option_id';
+    const CLOSED_KEY = 'is_voting_closed';
+    const ADMIN_PASS = 'admin123';
+
+    let selectedOption = null;
+    let isClosed = false;
+
+    const elSelect = document.getElementById('step-select');
+    const elConfirm = document.getElementById('step-confirm');
+    const elVoted = document.getElementById('step-voted');
+    const closedBanner = document.getElementById('closed-banner');
+
+    const optionsContainer = document.getElementById('options-container');
+    const btnConfirm = document.getElementById('btn-confirm');
+    const btnBack = document.getElementById('btn-back');
+    const btnSubmit = document.getElementById('btn-submit');
+
+    const confirmTarget = document.getElementById('confirm-target');
+    const votedResultText = document.getElementById('voted-result-text');
+    const resultsContainer = document.getElementById('results-container');
+    const totalVotesCount = document.getElementById('total-votes-count');
+
+    // 管理者パネル関連
+    const adminModal = document.getElementById('admin-modal');
+    const btnOpenAdmin = document.getElementById('btn-open-admin');
+    const btnCloseAdmin = document.getElementById('btn-close-admin');
+    const btnAdminLogin = document.getElementById('btn-admin-login');
+    const adminPassInput = document.getElementById('admin-pass');
+    const adminAuth = document.getElementById('admin-auth');
+    const adminControls = document.getElementById('admin-controls');
+    const adminStatusText = document.getElementById('admin-status-text');
+    const btnToggleClose = document.getElementById('btn-toggle-close');
+
+    function init() {
+      isClosed = localStorage.getItem(CLOSED_KEY) === 'true';
+      updateClosedUI();
+      renderOptions();
+      checkVotedStatus();
+    }
+
+    function updateClosedUI() {
+      if (isClosed) {
+        closedBanner.classList.remove('hidden');
+        btnToggleClose.textContent = '🔓 投票受付を再開する';
+        btnToggleClose.className = "w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-sm transition";
+        adminStatusText.textContent = "🔴 締め切り済み";
+        adminStatusText.className = "text-base font-black text-rose-600";
+      } else {
+        closedBanner.classList.add('hidden');
+        btnToggleClose.textContent = '🔒 投票を締め切る';
+        btnToggleClose.className = "w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-xl text-sm transition";
+        adminStatusText.textContent = "🟢 投票受付中";
+        adminStatusText.className = "text-base font-black text-emerald-700";
+      }
+    }
+
+    function renderOptions() {
+      optionsContainer.innerHTML = '';
+      for (let i = 1; i <= TOTAL_OPTIONS; i++) {
+        const btn = document.createElement('button');
+        btn.className = `option-btn w-full p-3 rounded-lg border-2 border-emerald-300 bg-white hover:bg-emerald-100 text-left font-bold flex items-center justify-between transition-all duration-100 shadow-sm ${isClosed ? 'opacity-50 cursor-not-allowed' : ''}`;
+        btn.disabled = isClosed;
+        btn.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-sm">${i}</span>
+            <span class="text-slate-800 font-bold">${i} 番馬</span>
+          </div>
+          <div class="w-10 h-6 border-2 border-slate-400 rounded bg-emerald-50 flex items-center justify-center mark-box">
+            <span class="w-full h-full bg-slate-900 opacity-0 transition-opacity"></span>
+          </div>
+        `;
+        btn.onclick = () => selectOption(i, btn);
+        optionsContainer.appendChild(btn);
+      }
+    }
+
+    function selectOption(id, element) {
+      if (isClosed) return;
+      selectedOption = id;
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('border-brand-green', 'bg-emerald-100');
+        btn.querySelector('.mark-box span').classList.add('opacity-0');
+      });
+      element.classList.add('border-brand-green', 'bg-emerald-100');
+      element.querySelector('.mark-box span').classList.remove('opacity-0');
+
+      btnConfirm.disabled = false;
+      btnConfirm.className = "w-full py-3.5 rounded-xl font-black text-base bg-brand-green hover:bg-emerald-600 text-white active:scale-[0.99] transition-all cursor-pointer shadow-lg border-b-4 border-emerald-900";
+    }
+
+    function checkVotedStatus() {
+      const savedVoted = localStorage.getItem(STORAGE_KEY);
+      if (savedVoted) {
+        showVotedScreen(savedVoted);
+        fetchResults();
+      } else {
+        showStep(elSelect);
+      }
+    }
+
+    function showStep(target) {
+      [elSelect, elConfirm, elVoted].forEach(el => el.classList.add('hidden'));
+      target.classList.remove('hidden');
+    }
+
+    function showVotedScreen(optionId) {
+      votedResultText.innerHTML = `あなたは <span class="text-brand-green font-black">${optionId}番</span> に<br class="sm:hidden">投票しました`;
+      showStep(elVoted);
+    }
+
+    async function fetchResults() {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        resultsContainer.innerHTML = `<p class="text-amber-300 text-xs text-center py-2">GASのURLが未設定です</p>`;
+        return;
+      }
+
+      try {
+        const response = await fetch(GAS_WEB_APP_URL);
+        const data = await response.json();
+        renderResultsGraph(data);
+      } catch (err) {
+        console.error(err);
+        resultsContainer.innerHTML = `<p class="text-red-300 text-xs text-center py-2">オッズの取得に失敗しました</p>`;
+      }
+    }
+
+    function renderResultsGraph(data) {
+      const total = data.total || 0;
+      const counts = data.counts || {};
+      const myVoted = localStorage.getItem(STORAGE_KEY);
+
+      totalVotesCount.textContent = `総投票数: ${total} 票`;
+      resultsContainer.innerHTML = '';
+
+      for (let i = 1; i <= TOTAL_OPTIONS; i++) {
+        const count = counts[i] || 0;
+        const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+        const isMyChoice = String(i) === String(myVoted);
+
+        const row = document.createElement('div');
+        row.className = 'space-y-1';
+        row.innerHTML = `
+          <div class="flex justify-between text-xs">
+            <span class="${isMyChoice ? 'text-amber-300 font-black' : 'text-slate-300'}">
+              ${i}番馬 ${isMyChoice ? '★あなたの本命' : ''}
+            </span>
+            <span class="text-emerald-200 font-mono">${count}票 (${percent}%)</span>
+          </div>
+          <div class="w-full h-2.5 bg-emerald-950 border border-emerald-800 rounded-full overflow-hidden flex">
+            <div class="h-full ${isMyChoice ? 'bg-amber-400' : 'bg-emerald-500'} transition-all duration-500" style="width: ${percent}%"></div>
+          </div>
+        `;
+        resultsContainer.appendChild(row);
+      }
+    }
+
+    btnConfirm.onclick = () => {
+      if (!selectedOption || isClosed) return;
+      confirmTarget.textContent = `${selectedOption} 番`;
+      showStep(elConfirm);
+    };
+
+    btnBack.onclick = () => showStep(elSelect);
+
+    btnSubmit.onclick = async () => {
+      if (!selectedOption || isClosed) return;
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = '発券処理中...';
+
+      localStorage.setItem(STORAGE_KEY, selectedOption);
+      showVotedScreen(selectedOption);
+
+      if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        try {
+          const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ option: selectedOption })
+          });
+          const data = await response.json();
+          renderResultsGraph(data);
+        } catch (err) {
+          console.error(err);
+          fetchResults();
         }
+      }
 
-        // タブ切替
-        function switchTab(tab) {
-            currentTab = tab;
-            selectedHorseId = null;
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = '投票確定（購入）';
+    };
 
-            const tabWin = document.getElementById('tabWin');
-            const tabFav = document.getElementById('tabFav');
-            const title = document.getElementById('sectionTitle');
-            const desc = document.getElementById('sectionDesc');
+    // 管理者パネルの制御
+    btnOpenAdmin.onclick = () => adminModal.classList.remove('hidden');
+    btnCloseAdmin.onclick = () => adminModal.classList.add('hidden');
 
-            if (tab === 'win') {
-                tabWin.className = "flex-1 py-2 text-sm sm:text-base font-bold rounded-md transition shadow bg-deepGreen text-white";
-                tabFav.className = "flex-1 py-2 text-sm sm:text-base font-bold rounded-md transition text-gray-700 hover:text-deepGreen";
-                title.innerHTML = `<i class="fa-solid fa-ticket text-goldAccent mr-2"></i> 1着予想馬券の購入・投票`;
-                desc.textContent = "優勝すると思われる競走馬を選択し投票してください。予想的中者の中から抽選で豪華賞品をプレゼント！";
-            } else {
-                tabFav.className = "flex-1 py-2 text-sm sm:text-base font-bold rounded-md transition shadow bg-deepGreen text-white";
-                tabWin.className = "flex-1 py-2 text-sm sm:text-base font-bold rounded-md transition text-gray-700 hover:text-deepGreen";
-                title.innerHTML = `<i class="fa-solid fa-heart text-red-500 mr-2"></i> 推し馬ファン投票`;
-                desc.textContent = "あなたのいち押し馬を応援しよう！投票数の多い人気競走馬は特製壁紙をプレゼント！";
-            }
+    btnAdminLogin.onclick = () => {
+      if (adminPassInput.value === ADMIN_PASS) {
+        adminAuth.classList.add('hidden');
+        adminControls.classList.remove('hidden');
+      } else {
+        alert('パスワードが違います');
+      }
+    };
 
-            renderHorseList();
-            updateSubmitButton();
-            updateVotedBadge();
-        }
+    btnToggleClose.onclick = () => {
+      isClosed = !isClosed;
+      localStorage.setItem(CLOSED_KEY, isClosed);
+      updateClosedUI();
+      renderOptions();
+      alert(isClosed ? '投票を締め切りました。' : '投票受付を再開しました。');
+    };
 
-        // 出走馬リストの描画
-        function renderHorseList() {
-            const container = document.getElementById('horseList');
-            container.innerHTML = '';
-
-            HORSES.forEach(horse => {
-                const isSelected = selectedHorseId === horse.id;
-                const card = document.createElement('div');
-                card.className = `p-4 flex items-center justify-between cursor-pointer transition ${isSelected ? 'bg-emerald-50 border-l-4 border-deepGreen' : 'hover:bg-gray-50'}`;
-                card.onclick = () => selectHorse(horse.id);
-
-                card.innerHTML = `
-                    <div class="flex items-center space-y-0 space-x-3 sm:space-x-4">
-                        <!-- 枠番アイコン -->
-                        <span class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-bold text-xs sm:text-sm rounded-full shadow-sm ${horse.color}">
-                            ${horse.gate}
-                        </span>
-                        <div>
-                            <div class="font-bold font-mincho text-base sm:text-lg text-gray-900">${horse.name}</div>
-                            <div class="text-xs text-gray-500">騎手: ${horse.jockey}</div>
-                        </div>
-                    </div>
-                    <div class="text-right flex items-center space-x-3">
-                        <span class="text-xs font-semibold text-gray-400 hidden sm:inline">単勝 ${horse.odds}倍</span>
-                        <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center ${isSelected ? 'border-deepGreen bg-deepGreen text-white' : ''}">
-                            ${isSelected ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // 馬を選択
-        function selectHorse(id) {
-            if (!isVotingOpen) return;
-            selectedHorseId = id;
-            renderHorseList();
-            updateSubmitButton();
-        }
-
-        // 投票送信ボタン状態更新
-        function updateSubmitButton() {
-            const btn = document.getElementById('submitVoteBtn');
-            const summary = document.getElementById('selectionSummary');
-            const notice = document.getElementById('closedNotice');
-
-            if (!isVotingOpen) {
-                btn.disabled = true;
-                btn.className = "w-full sm:w-2/3 py-3.5 px-6 rounded-xl text-white font-bold text-lg shadow-md bg-gray-400 cursor-not-allowed";
-                btn.textContent = "投票受付は終了しました";
-                summary.textContent = "現在締め切り中のため投票できません";
-                notice.classList.remove('hidden');
-                return;
-            }
-
-            notice.classList.add('hidden');
-
-            if (selectedHorseId === null) {
-                btn.disabled = true;
-                btn.className = "w-full sm:w-2/3 py-3.5 px-6 rounded-xl text-white font-bold text-lg shadow-md bg-gray-400 cursor-not-allowed";
-                btn.textContent = "選択してください";
-                summary.textContent = "馬を選択してください";
-            } else {
-                const horse = HORSES.find(h => h.id === selectedHorseId);
-                btn.disabled = false;
-                btn.className = "w-full sm:w-2/3 py-3.5 px-6 rounded-xl text-white font-bold text-lg shadow-lg bg-deepGreen hover:bg-deepGreenDark active:scale-95 transition cursor-pointer";
-                btn.textContent = `${horse.name} に投票する`;
-                summary.innerHTML = `選択中: <span class="text-deepGreen font-bold">${horse.name}</span> (${currentTab === 'win' ? '1着予想' : '推し馬投票'})`;
-            }
-        }
-
-        // 投票バッジ表示状態更新
-        function updateVotedBadge() {
-            const badge = document.getElementById('votedBadge');
-            const votedHorseId = localStorage.getItem(`voted_${currentTab}`);
-            if (votedHorseId) {
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        // 投票処理実行
-        async function submitVote() {
-            if (!isVotingOpen || selectedHorseId === null) return;
-
-            const horse = HORSES.find(h => h.id === selectedHorseId);
-            const tabName = currentTab === 'win' ? '1着予想馬券' : '推し馬投票';
-
-            // ローカルカウントの更新
-            const votesKey = `votes_count_${currentTab}_${selectedHorseId}`;
-            const currentCount = parseInt(localStorage.getItem(votesKey) || "0", 10);
-            localStorage.setItem(votesKey, currentCount + 1);
-
-            // ユーザーの投票記録
-            localStorage.setItem(`voted_${currentTab}`, selectedHorseId);
-
-            // GAS API 送信 (連携設定がある場合)
-            if (gasApiUrl) {
-                try {
-                    fetch(gasApiUrl, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: currentTab,
-                            horseId: horse.id,
-                            horseName: horse.name,
-                            timestamp: new Date().toISOString()
-                        })
-                    });
-                } catch (e) {
-                    console.error("GAS送信失敗", e);
-                }
-            }
-
-            alert(`【投票完了】\n${tabName}にて「${horse.name}」に投票しました。ありがとうございます！`);
-            
-            selectedHorseId = null;
-            renderHorseList();
-            updateSubmitButton();
-            updateVotedBadge();
-            updateStatsUI();
-        }
-
-        // 投票ステータスのUI変更
-        function updateStatusUI() {
-            const banner = document.getElementById('statusBanner');
-            const dot = document.getElementById('statusDot');
-            const text = document.getElementById('statusText');
-            const adminLabel = document.getElementById('adminStatusLabel');
-            const toggleBtn = document.getElementById('toggleStatusBtn');
-
-            if (isVotingOpen) {
-                banner.className = "bg-emerald-800 text-white py-2.5 px-4 text-center font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-inner";
-                dot.className = "inline-block w-3 h-3 rounded-full bg-green-400 animate-pulse";
-                text.textContent = "ただいま投票受付中";
-
-                if (adminLabel) {
-                    adminLabel.className = "font-bold text-green-600 text-sm";
-                    adminLabel.innerHTML = `<i class="fa-solid fa-circle text-xs mr-1"></i> 投票受付中`;
-                }
-                if (toggleBtn) {
-                    toggleBtn.textContent = "締め切る";
-                    toggleBtn.className = "px-4 py-2 rounded-lg font-bold text-sm shadow transition bg-red-600 hover:bg-red-700 text-white";
-                }
-            } else {
-                banner.className = "bg-gray-800 text-gray-200 py-2.5 px-4 text-center font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-inner";
-                dot.className = "inline-block w-3 h-3 rounded-full bg-red-500";
-                text.textContent = "投票受付は終了しました（締め切り）";
-
-                if (adminLabel) {
-                    adminLabel.className = "font-bold text-red-600 text-sm";
-                    adminLabel.innerHTML = `<i class="fa-solid fa-circle text-xs mr-1"></i> 締め切り済み`;
-                }
-                if (toggleBtn) {
-                    toggleBtn.textContent = "受付を再開する";
-                    toggleBtn.className = "px-4 py-2 rounded-lg font-bold text-sm shadow transition bg-green-600 hover:bg-green-700 text-white";
-                }
-            }
-
-            updateSubmitButton();
-        }
-
-        // 集計結果プログレスバー表示
-        function updateStatsUI() {
-            const container = document.getElementById('statsContainer');
-            container.innerHTML = '';
-
-            // 各馬の現在のローカル投票数を集計
-            let total = 0;
-            const counts = HORSES.map(h => {
-                const count = parseInt(localStorage.getItem(`votes_count_${currentTab}_${h.id}`) || "0", 10);
-                total += count;
-                return { ...h, count };
-            });
-
-            HORSES.forEach(h => {
-                const item = counts.find(c => c.id === h.id);
-                const percent = total > 0 ? Math.round((item.count / total) * 100) : 0;
-
-                const row = document.createElement('div');
-                row.className = "space-y-1";
-                row.innerHTML = `
-                    <div class="flex justify-between text-xs font-semibold text-gray-700">
-                        <span>${h.name}</span>
-                        <span>${item.count} 票 (${percent}%)</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                        <div class="bg-deepGreen h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        // ==========================================
-        // 管理者コントロールパネル関連ロジック
-        // ==========================================
-
-        function openAdminModal() {
-            document.getElementById('adminModal').classList.remove('hidden');
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModal').classList.add('hidden');
-        }
-
-        function authenticateAdmin() {
-            const pass = document.getElementById('adminPassInput').value;
-            if (pass === "admin123") {
-                isAdminLoggedIn = true;
-                document.getElementById('adminAuthBlock').classList.add('hidden');
-                document.getElementById('adminControls').classList.remove('hidden');
-                updateStatusUI();
-            } else {
-                alert("パスワードが違います。");
-            }
-        }
-
-        // 締め切り / 受付開始の切替
-        function toggleVotingStatus() {
-            isVotingOpen = !isVotingOpen;
-            localStorage.setItem('mejiro_voting_open', JSON.stringify(isVotingOpen));
-            
-            // GAS APIへステータス変更イベント送信（任意）
-            gasUrlInput = document.getElementById('gasUrlInput').value;
-            if (gasUrlInput) {
-                localStorage.setItem('mejiro_gas_url', gasUrlInput);
-            }
-
-            updateStatusUI();
-        }
-
-        // 投票データクリア
-        function clearLocalVotes() {
-            if (confirm("ローカルに保存されている投票カウント履歴を消去しますか？")) {
-                HORSES.forEach(h => {
-                    localStorage.removeItem(`votes_count_win_${h.id}`);
-                    localStorage.removeItem(`votes_count_fav_${h.id}`);
-                });
-                localStorage.removeItem(`voted_win`);
-                localStorage.removeItem(`voted_fav`);
-                updateStatsUI();
-                updateVotedBadge();
-                alert("データをクリアしました。");
-            }
-        }
-    </script>
+    init();
+  </script>
 </body>
 </html>
