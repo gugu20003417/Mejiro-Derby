@@ -143,14 +143,14 @@
             <span id="voted-status-tag" class="text-xs font-mono font-bold text-slate-500">投票完了</span>
           </div>
 
-          <!-- メイン表示（確定済 / 的中 / 払戻済） -->
+          <!-- メイン表示 -->
           <div id="voted-display-box" class="bg-white border-2 border-slate-900 rounded-xl p-6 text-center my-3 shadow-inner relative">
             <p id="voted-sub-text" class="text-sm font-black text-slate-500 tracking-widest mb-1 font-heavy-gothic">確定済</p>
             <h2 id="voted-result-number" class="text-7xl sm:text-8xl font-black text-brand-green tracking-tight py-2 font-heavy-gothic leading-none">
               3番
             </h2>
             
-            <!-- 払戻済スタンプ表示エリア -->
+            <!-- 払戻済スタンプ -->
             <div id="redeemed-stamp" class="hidden my-2">
               <span class="stamp-redeemed font-heavy-gothic text-2xl sm:text-3xl tracking-widest">
                 払戻済
@@ -158,11 +158,10 @@
             </div>
           </div>
 
-          <!-- 的中時の係員専用（景品引換）ボタンエリア -->
+          <!-- ワンタップで即時「払戻済」にするボタン -->
           <div id="redeem-action-area" class="hidden mt-4 pt-3 border-t-2 border-dashed border-amber-300 text-center">
-            <p class="text-[11px] font-bold text-amber-900 mb-2">🎁 窓口で景品をお受け取りの際、係員がボタンを押します</p>
-            <button id="btn-redeem" class="w-full py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black rounded-xl text-sm shadow-md transition font-heavy-gothic">
-              【係員専用】景品を引き換える（払戻）
+            <button id="btn-redeem" class="w-full py-4 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black rounded-xl text-base shadow-lg transition font-heavy-gothic tracking-wider">
+              🎁【窓口用】タップして景品引き換え（払戻済）
             </button>
           </div>
 
@@ -206,14 +205,16 @@
         ⚙️ 管理者コントロールパネル
       </h3>
 
+      <!-- ログイン領域 -->
       <div id="admin-auth" class="space-y-3">
-        <p class="text-xs text-slate-600">管理パスワードを入力してください</p>
+        <p class="text-xs text-slate-600">管理パスワードを入力してください（初期: admin123）</p>
         <input type="password" id="admin-pass" placeholder="パスワード" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-600">
         <button id="btn-admin-login" class="w-full py-2 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 font-heavy-gothic">ログイン</button>
       </div>
 
+      <!-- 管理メニュー領域 -->
       <div id="admin-controls" class="hidden space-y-5">
-        <!-- 締め切りスイッチ -->
+        <!-- 1. 締め切りスイッチ -->
         <div class="p-3.5 bg-slate-100 rounded-xl space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-500">現在のステータス</span>
@@ -224,7 +225,7 @@
           </button>
         </div>
 
-        <!-- 的中馬の指定 -->
+        <!-- 2. 的中馬の指定 -->
         <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-xl space-y-2">
           <label class="block text-xs font-black text-amber-900 font-heavy-gothic">🏆 レース結果（的中馬）の確定</label>
           <div class="flex gap-2">
@@ -244,7 +245,7 @@
           </div>
         </div>
 
-        <!-- リアルタイム投票状況 -->
+        <!-- 3. リアルタイム投票状況 -->
         <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
           <div class="flex items-center justify-between border-b pb-2">
             <h4 class="text-xs font-black text-slate-800 flex items-center gap-1 font-heavy-gothic">
@@ -261,6 +262,17 @@
             🔄 集計データを最新化
           </button>
         </div>
+
+        <!-- 4. パスワード変更機能 -->
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
+          <h4 class="text-xs font-black text-slate-800 font-heavy-gothic">🔑 管理用パスワードの変更</h4>
+          <div class="flex gap-2">
+            <input type="password" id="input-new-pass" placeholder="新しいパスワード" class="flex-grow px-3 py-1.5 border border-slate-300 rounded text-xs focus:outline-none">
+            <button id="btn-change-pass" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded text-xs font-heavy-gothic whitespace-nowrap">
+              変更保存
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -271,13 +283,12 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3c1xhQLXvQR8plRhOey6KuCQrdkUTCbds1heJTgx5mTNnEuiqcWWh1NvECUyk2erA/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzOTIRnAA2sOTw4dD5u_J0UCdGJenB333p8s42_uhJecBd2gUTYOL5ajy6VsX9oxas/exec";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY = 'voted_option_id';
     const REDEEMED_KEY = 'is_prize_redeemed';
     const CLOSED_KEY = 'is_voting_closed';
-    const ADMIN_PASS = 'admin123';
 
     let selectedOption = null;
     let isClosed = false;
@@ -324,6 +335,8 @@
     const adminTotalVotes = document.getElementById('admin-total-votes');
     const adminVotesList = document.getElementById('admin-votes-list');
     const btnRefreshAdminData = document.getElementById('btn-refresh-admin-data');
+    const inputNewPass = document.getElementById('input-new-pass');
+    const btnChangePass = document.getElementById('btn-change-pass');
 
     function init() {
       isClosed = localStorage.getItem(CLOSED_KEY) === 'true';
@@ -437,7 +450,6 @@
         return;
       }
 
-      // 公式発表バナーの更新
       officialResultBanner.classList.remove('hidden');
       officialResultText.textContent = `🏆 1着的中馬: ${winningNumber} 番馬`;
 
@@ -550,13 +562,11 @@
       }
     }
 
-    // 係員用：景品引換（払戻）処理
+    // ★変更点1: 確認アラートを排除し、タップ1回で即時「払戻済」に変更
     btnRedeem.onclick = () => {
-      if (confirm('【係員用確認】\n景品を手渡しましたか？\n「OK」を押すと「払戻済」に変更され、再引き換えができなくなります。')) {
-        localStorage.setItem(REDEEMED_KEY, 'true');
-        const myVoted = localStorage.getItem(STORAGE_KEY);
-        applyTicketResultStyle(myVoted);
-      }
+      localStorage.setItem(REDEEMED_KEY, 'true');
+      const myVoted = localStorage.getItem(STORAGE_KEY);
+      applyTicketResultStyle(myVoted);
     };
 
     btnConfirm.onclick = () => {
@@ -597,7 +607,6 @@
       btnSubmit.textContent = '投票確定（購入）';
     };
 
-    // 管理者モーダル
     btnOpenAdmin.onclick = () => {
       adminModal.classList.remove('hidden');
       if (!adminControls.classList.contains('hidden')) {
@@ -607,14 +616,42 @@
 
     btnCloseAdmin.onclick = () => adminModal.classList.add('hidden');
 
-    btnAdminLogin.onclick = () => {
-      if (adminPassInput.value === ADMIN_PASS) {
-        adminAuth.classList.add('hidden');
-        adminControls.classList.remove('hidden');
-        fetchResults();
-      } else {
-        alert('パスワードが違います');
+    // ★変更点2: GAS側と通信して最新の管理用パスワードを判定
+    btnAdminLogin.onclick = async () => {
+      const pass = adminPassInput.value;
+      btnAdminLogin.disabled = true;
+      btnAdminLogin.textContent = '認証中...';
+
+      try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'verifyAdminPassword', password: pass })
+        });
+        const res = await response.json();
+
+        if (res.success) {
+          adminAuth.classList.add('hidden');
+          adminControls.classList.remove('hidden');
+          fetchResults();
+        } else {
+          alert('パスワードが違います');
+        }
+      } catch (e) {
+        console.error(e);
+        // 通信エラー時のバックアップ判定
+        if (pass === 'admin123') {
+          adminAuth.classList.add('hidden');
+          adminControls.classList.remove('hidden');
+          fetchResults();
+        } else {
+          alert('パスワードが違います');
+        }
       }
+
+      btnAdminLogin.disabled = false;
+      btnAdminLogin.textContent = 'ログイン';
     };
 
     btnToggleClose.onclick = () => {
@@ -627,7 +664,6 @@
 
     btnSetWinner.onclick = async () => {
       const selected = selectWinningNumber.value;
-      if (!confirm(`1着的中馬を「 ${selected == 0 ? '未発表' : selected + '番馬'} 」に設定して確定しますか？`)) return;
 
       btnSetWinner.disabled = true;
       btnSetWinner.textContent = '更新中...';
@@ -657,6 +693,35 @@
 
       btnSetWinner.disabled = false;
       btnSetWinner.textContent = '結果確定';
+    };
+
+    // ★パスワード変更処理の保存
+    btnChangePass.onclick = async () => {
+      const newPass = inputNewPass.value.trim();
+      if (!newPass) {
+        alert('新しいパスワードを入力してください');
+        return;
+      }
+
+      btnChangePass.disabled = true;
+      btnChangePass.textContent = '保存中...';
+
+      try {
+        await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'changeAdminPassword', newPassword: newPass })
+        });
+        alert(`パスワードを「 ${newPass} 」に変更しました！`);
+        inputNewPass.value = '';
+      } catch (e) {
+        console.error(e);
+        alert('パスワード変更に失敗しました');
+      }
+
+      btnChangePass.disabled = false;
+      btnChangePass.textContent = '変更保存';
     };
 
     btnRefreshAdminData.onclick = () => {
