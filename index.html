@@ -66,7 +66,7 @@
 </head>
 <body class="bg-brand-green text-slate-800 min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-emerald-200">
 
-  <!-- ヘッダー（審議中画面の上でも押せるよう z-index を50に設定） -->
+  <!-- ヘッダー -->
   <header class="bg-brand-dark border-b-4 border-emerald-950 shadow-xl py-4 px-4 text-center relative z-50">
     <div class="max-w-lg mx-auto flex items-center justify-center gap-2">
       <span class="text-2xl drop-shadow">🏇</span>
@@ -81,17 +81,15 @@
     </button>
   </header>
 
-  <!-- 🚨 審議中画面オーバーレイ（z-index を40に設定してヘッダー直下に配置） -->
+  <!-- 🚨 審議中画面オーバーレイ -->
   <div id="deliberation-screen" class="hidden fixed inset-0 bg-blue-900 z-40 flex flex-col items-center justify-center p-6 text-center fade-in">
     <div class="max-w-md w-full space-y-8">
-      <!-- 赤色の背景ボックス -->
       <div class="bg-red-600 border-4 border-white rounded-2xl py-8 px-4 shadow-2xl transform -rotate-1">
         <h2 class="text-6xl sm:text-7xl font-black tracking-widest text-black-stroke font-heavy-gothic">
           審議中
         </h2>
       </div>
 
-      <!-- 下部メッセージ -->
       <p class="text-2xl sm:text-3xl font-black tracking-wider text-black-stroke font-heavy-gothic leading-relaxed">
         確定までお待ちください
       </p>
@@ -302,7 +300,7 @@
     </div>
   </main>
 
-  <!-- 管理者モーダル (z-index を60にして最前面に設置) -->
+  <!-- 管理者モーダル -->
   <div id="admin-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
     <div class="bg-white border-4 border-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
       <button id="btn-close-admin" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
@@ -341,37 +339,31 @@
           </button>
         </div>
 
-        <!-- 3. 着順指定 -->
+        <!-- 3. 着順指定（★ラジオボタン選択形式） -->
         <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-xl space-y-3">
-          <label class="block text-xs font-black text-amber-900 font-heavy-gothic">🏆 着順の確定（1着・2着・3着）</label>
+          <label class="block text-xs font-black text-amber-900 font-heavy-gothic">🏆 着順の確定（1着・2着・3着を選択）</label>
           
-          <div class="space-y-2 text-xs font-bold">
-            <div class="flex items-center gap-2">
-              <span class="w-12 text-amber-800">🥇 1着:</span>
-              <select id="select-win-1st" class="flex-grow p-1.5 border rounded bg-white">
-                <option value="0">未確定</option>
-                <option value="1">1番馬</option><option value="2">2番馬</option><option value="3">3番馬</option>
-                <option value="4">4番馬</option><option value="5">5番馬</option><option value="6">6番馬</option><option value="7">7番馬</option>
-              </select>
+          <div class="bg-white p-2.5 border border-amber-200 rounded-lg">
+            <div class="grid grid-cols-12 text-[11px] font-black text-slate-500 text-center pb-2 border-b border-slate-200">
+              <span class="col-span-4 text-left pl-1">馬番</span>
+              <span class="col-span-2 text-amber-700">🥇1着</span>
+              <span class="col-span-2 text-slate-600">🥈2着</span>
+              <span class="col-span-2 text-amber-900">🥉3着</span>
+              <span class="col-span-2 text-slate-400">解除</span>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="w-12 text-slate-700">🥈 2着:</span>
-              <select id="select-win-2nd" class="flex-grow p-1.5 border rounded bg-white">
-                <option value="0">未確定</option>
-                <option value="1">1番馬</option><option value="2">2番馬</option><option value="3">3番馬</option>
-                <option value="4">4番馬</option><option value="5">5番馬</option><option value="6">6番馬</option><option value="7">7番馬</option>
-              </select>
+
+            <!-- 1〜7番馬の行コンテナ -->
+            <div id="winner-radio-rows" class="divide-y divide-slate-100">
+              <!-- JSで生成 -->
             </div>
-            <div class="flex items-center gap-2">
-              <span class="w-12 text-amber-900">🥉 3着:</span>
-              <select id="select-win-3rd" class="flex-grow p-1.5 border rounded bg-white">
-                <option value="0">未確定</option>
-                <option value="1">1番馬</option><option value="2">2番馬</option><option value="3">3番馬</option>
-                <option value="4">4番馬</option><option value="5">5番馬</option><option value="6">6番馬</option><option value="7">7番馬</option>
-              </select>
-            </div>
-            <button id="btn-set-winner" class="w-full mt-2 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded text-xs font-heavy-gothic shadow">
-              着順結果を確定（審議解除）
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <button id="btn-reset-winner" class="py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition font-heavy-gothic border border-slate-300">
+              🔄 全リセット
+            </button>
+            <button id="btn-set-winner" class="py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-lg text-xs font-heavy-gothic shadow">
+              着順結果を確定
             </button>
           </div>
         </div>
@@ -421,7 +413,7 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbysG7l9c4VsB12eGzjDJiQYkyGNY1BhczDhKmQ7dbqsEcX39UyRlwmEWjPSlrUfVP2H/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwtge2EN7LaYsblqk4tUBvslHgNHAeFzw2mjcyLG-452KDkGZ5vl6wfAI82TFhZzdoT/exec";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY_TYPE = 'voted_ticket_type';
@@ -434,6 +426,9 @@
     let isClosed = false;
     let isDeliberating = false;
     let win1st = 0, win2nd = 0, win3rd = 0;
+    
+    // 管理者によるラジオボタン編集中の自動同期（上書きリセット）を防止するフラグ
+    let isEditingWinnerRadios = false;
 
     const deliberationScreen = document.getElementById('deliberation-screen');
 
@@ -495,10 +490,9 @@
     const btnToggleDeliberative = document.getElementById('btn-toggle-deliberative');
     const adminDeliberatingText = document.getElementById('admin-deliberating-text');
 
-    const selectWin1st = document.getElementById('select-win-1st');
-    const selectWin2nd = document.getElementById('select-win-2nd');
-    const selectWin3rd = document.getElementById('select-win-3rd');
+    const winnerRadioRows = document.getElementById('winner-radio-rows');
     const btnSetWinner = document.getElementById('btn-set-winner');
+    const btnResetWinner = document.getElementById('btn-reset-winner');
 
     const adminTotalVotes = document.getElementById('admin-total-votes');
     const adminVotesList = document.getElementById('admin-votes-list');
@@ -513,9 +507,71 @@
       updateClosedUI();
       renderTanshoOptions();
       initMultiSelects();
+      renderWinnerRadioTable();
       checkVotedStatus();
       
       setInterval(fetchResults, 5000);
+    }
+
+    // 着順選択用ラジオボタンテーブルの作成
+    function renderWinnerRadioTable() {
+      winnerRadioRows.innerHTML = '';
+      for (let i = 1; i <= TOTAL_OPTIONS; i++) {
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-12 py-2 items-center text-xs border-b border-slate-100 hover:bg-slate-50';
+        row.innerHTML = `
+          <span class="col-span-4 font-bold text-slate-800 pl-1 font-heavy-gothic">${i} 番馬</span>
+          <div class="col-span-2 text-center">
+            <input type="radio" name="rank-1st" value="${i}" id="radio-1st-${i}" class="w-4 h-4 accent-amber-500 cursor-pointer">
+          </div>
+          <div class="col-span-2 text-center">
+            <input type="radio" name="rank-2nd" value="${i}" id="radio-2nd-${i}" class="w-4 h-4 accent-slate-600 cursor-pointer">
+          </div>
+          <div class="col-span-2 text-center">
+            <input type="radio" name="rank-3rd" value="${i}" id="radio-3rd-${i}" class="w-4 h-4 accent-amber-800 cursor-pointer">
+          </div>
+          <div class="col-span-2 text-center">
+            <button type="button" onclick="clearHorseRank(${i})" class="text-[10px] text-slate-400 hover:text-red-500 underline font-bold">クリア</button>
+          </div>
+        `;
+        winnerRadioRows.appendChild(row);
+      }
+
+      // 管理者が操作した時に編集中フラグを立てて、自動同期による書き換えを防ぐ
+      winnerRadioRows.addEventListener('change', () => {
+        isEditingWinnerRadios = true;
+      });
+    }
+
+    // 個別馬のチェック解除
+    window.clearHorseRank = function(horseNum) {
+      isEditingWinnerRadios = true;
+      ['rank-1st', 'rank-2nd', 'rank-3rd'].forEach(rankName => {
+        const radio = document.querySelector(`input[name="${rankName}"][value="${horseNum}"]`);
+        if (radio) radio.checked = false;
+      });
+    };
+
+    // UIラジオボタンの状態同期 (編集中でない場合のみ反映)
+    function syncWinnerRadios() {
+      if (isEditingWinnerRadios) return; // 管理者が手動入力中の場合は何もしない
+
+      ['rank-1st', 'rank-2nd', 'rank-3rd'].forEach(rName => {
+        document.querySelectorAll(`input[name="${rName}"]`).forEach(r => r.checked = false);
+      });
+
+      if (win1st > 0) {
+        const r1 = document.getElementById(`radio-1st-${win1st}`);
+        if (r1) r1.checked = true;
+      }
+      if (win2nd > 0) {
+        const r2 = document.getElementById(`radio-2nd-${win2nd}`);
+        if (r2) r2.checked = true;
+      }
+      if (win3rd > 0) {
+        const r3 = document.getElementById(`radio-3rd-${win3rd}`);
+        if (r3) r3.checked = true;
+      }
     }
 
     function updateClosedUI() {
@@ -776,17 +832,13 @@
       try {
         const response = await fetch(GAS_WEB_APP_URL);
         const data = await response.json();
-        win1st = data.win1st || 0;
-        win2nd = data.win2nd || 0;
-        win3rd = data.win3rd || 0;
+        win1st = Number(data.win1st || 0);
+        win2nd = Number(data.win2nd || 0);
+        win3rd = Number(data.win3rd || 0);
         
-        // 明示的にブーリアン判定
         isDeliberating = (data.isDeliberating === true || String(data.isDeliberating) === 'true');
         
-        selectWin1st.value = win1st;
-        selectWin2nd.value = win2nd;
-        selectWin3rd.value = win3rd;
-
+        syncWinnerRadios();
         updateDeliberationUI();
 
         const myType = localStorage.getItem(STORAGE_KEY_TYPE);
@@ -931,7 +983,10 @@
       }
     };
 
-    btnCloseAdmin.onclick = () => adminModal.classList.add('hidden');
+    btnCloseAdmin.onclick = () => {
+      isEditingWinnerRadios = false; // モーダルを閉じたときに編集中フラグを解除
+      adminModal.classList.add('hidden');
+    };
 
     btnAdminLogin.onclick = async () => {
       const pass = adminPassInput.value;
@@ -996,50 +1051,109 @@
       alert(isClosed ? '投票を締め切りました。' : '投票受付を再開しました。');
     };
 
+    // 着順確定処理（ラジオボタンの値を取得して送信）
     btnSetWinner.onclick = async () => {
-      const w1 = selectWin1st.value;
-      const w2 = selectWin2nd.value;
-      const w3 = selectWin3rd.value;
+      const r1 = document.querySelector('input[name="rank-1st"]:checked');
+      const r2 = document.querySelector('input[name="rank-2nd"]:checked');
+      const r3 = document.querySelector('input[name="rank-3rd"]:checked');
+
+      const w1 = r1 ? r1.value : "0";
+      const w2 = r2 ? r2.value : "0";
+      const w3 = r3 ? r3.value : "0";
 
       if (w1 === "0") {
-        alert("1着の馬番を選択してください。");
+        alert("🥇 1着の馬番を選択してください。");
         return;
       }
 
       btnSetWinner.disabled = true;
       btnSetWinner.textContent = '更新中...';
 
+      win1st = Number(w1);
+      win2nd = Number(w2);
+      win3rd = Number(w3);
+      isDeliberating = false;
+      
+      updateDeliberationUI();
+      
+      const myType = localStorage.getItem(STORAGE_KEY_TYPE);
+      const myOption = localStorage.getItem(STORAGE_KEY_OPTION);
+      if (myOption && myType) applyTicketResultStyle(myType, myOption);
+
       if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
         try {
-          const response = await fetch(GAS_WEB_APP_URL, {
+          await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ action: 'setWinningNumbers', win1st: w1, win2nd: w2, win3rd: w3 })
           });
-          const data = await response.json();
-          win1st = data.win1st || 0;
-          win2nd = data.win2nd || 0;
-          win3rd = data.win3rd || 0;
-          isDeliberating = false; // フロント側で即時解除
           
-          updateDeliberationUI();
+          setTimeout(async () => {
+            isEditingWinnerRadios = false; // 送信完了後にフラグ解除して最新化
+            await fetchResults();
+            alert('着順結果を確定（審議解除）しました！');
+          }, 400);
 
-          const myType = localStorage.getItem(STORAGE_KEY_TYPE);
-          const myOption = localStorage.getItem(STORAGE_KEY_OPTION);
-          if (myOption && myType) applyTicketResultStyle(myType, myOption);
-
-          renderResultsGraph(data);
-          renderAdminData(data);
-          alert('着順結果を確定（審議解除）しました！');
         } catch (err) {
           console.error(err);
-          alert('送信エラーが発生しました');
+          alert('送信中にエラーが発生しましたが、ローカル表示を更新しました。');
+          isEditingWinnerRadios = false;
+          fetchResults();
         }
+      } else {
+        isEditingWinnerRadios = false;
       }
 
       btnSetWinner.disabled = false;
-      btnSetWinner.textContent = '着順結果を確定（審議解除）';
+      btnSetWinner.textContent = '着順結果を確定';
+    };
+
+    // 着順を未確定に戻すリセット処理
+    btnResetWinner.onclick = async () => {
+      if (!confirm("着順結果をクリアして未確定状態に戻しますか？")) return;
+
+      btnResetWinner.disabled = true;
+
+      // ラジオボタン解除
+      ['rank-1st', 'rank-2nd', 'rank-3rd'].forEach(rName => {
+        document.querySelectorAll(`input[name="${rName}"]`).forEach(r => r.checked = false);
+      });
+
+      win1st = 0;
+      win2nd = 0;
+      win3rd = 0;
+
+      const myType = localStorage.getItem(STORAGE_KEY_TYPE);
+      const myOption = localStorage.getItem(STORAGE_KEY_OPTION);
+      if (myOption && myType) applyTicketResultStyle(myType, myOption);
+
+      if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        try {
+          await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'setWinningNumbers', win1st: 0, win2nd: 0, win3rd: 0 })
+          });
+          
+          setTimeout(async () => {
+            isEditingWinnerRadios = false;
+            await fetchResults();
+            alert('着順を未確定にリセットしました！');
+          }, 400);
+
+        } catch (err) {
+          console.error(err);
+          alert('リセット処理中にエラーが発生しました');
+          isEditingWinnerRadios = false;
+          fetchResults();
+        }
+      } else {
+        isEditingWinnerRadios = false;
+      }
+
+      btnResetWinner.disabled = false;
     };
 
     btnChangePass.onclick = async () => {
@@ -1078,6 +1192,7 @@
     };
 
     btnRefreshAdminData.onclick = () => {
+      isEditingWinnerRadios = false;
       fetchResults();
     };
 
