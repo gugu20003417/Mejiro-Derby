@@ -421,7 +421,7 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL_HERE";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwtge2EN7LaYsblqk4tUBvslHgNHAeFzw2mjcyLG-452KDkGZ5vl6wfAI82TFhZzdoT/exec";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY_TYPE = 'voted_ticket_type';
@@ -779,7 +779,9 @@
         win1st = data.win1st || 0;
         win2nd = data.win2nd || 0;
         win3rd = data.win3rd || 0;
-        isDeliberating = data.isDeliberating || false;
+        
+        // 判定漏れを防ぐため明示的にブーリアン判定
+        isDeliberating = (data.isDeliberating === true || String(data.isDeliberating) === 'true');
         
         selectWin1st.value = win1st;
         selectWin2nd.value = win2nd;
@@ -999,6 +1001,11 @@
       const w2 = selectWin2nd.value;
       const w3 = selectWin3rd.value;
 
+      if (w1 === "0") {
+        alert("1着の馬番を選択してください。");
+        return;
+      }
+
       btnSetWinner.disabled = true;
       btnSetWinner.textContent = '更新中...';
 
@@ -1014,7 +1021,7 @@
           win1st = data.win1st || 0;
           win2nd = data.win2nd || 0;
           win3rd = data.win3rd || 0;
-          isDeliberating = false;
+          isDeliberating = false; // フロント側で即時解除
           
           updateDeliberationUI();
 
