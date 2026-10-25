@@ -339,7 +339,7 @@
           </button>
         </div>
 
-        <!-- 3. 着順指定（★ラジオボタン選択形式） -->
+        <!-- 3. 着順指定（ラジオボタン表） -->
         <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-xl space-y-3">
           <label class="block text-xs font-black text-amber-900 font-heavy-gothic">🏆 着順の確定（1着・2着・3着を選択）</label>
           
@@ -413,7 +413,7 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxiOXqC4I8CCRvqXvvUKRsE_E-hXeo9ifHtHODKpFDhIpho_VvcWXkpV5VNmVejRcbb/exec ";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWj3z-HwAfIrs6uhPiPCR3iyKcvU9p84CF8mw0O6xZHwIHhUyWFagJXSaNdMBfxvqR/exec";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY_TYPE = 'voted_ticket_type';
@@ -427,8 +427,8 @@
     let isDeliberating = false;
     let win1st = 0, win2nd = 0, win3rd = 0;
     
-    // 管理者によるラジオボタン編集中の自動同期（上書きリセット）を防止するフラグ
-    let isEditingWinnerRadios = false;
+    // 管理モーダル開閉状態（開いている時は背景での自動更新・上書きをポーズ）
+    let isAdminOpen = false;
 
     const deliberationScreen = document.getElementById('deliberation-screen');
 
@@ -536,26 +536,18 @@
         `;
         winnerRadioRows.appendChild(row);
       }
-
-      // 管理者が操作した時に編集中フラグを立てて、自動同期による書き換えを防ぐ
-      winnerRadioRows.addEventListener('change', () => {
-        isEditingWinnerRadios = true;
-      });
     }
 
     // 個別馬のチェック解除
     window.clearHorseRank = function(horseNum) {
-      isEditingWinnerRadios = true;
       ['rank-1st', 'rank-2nd', 'rank-3rd'].forEach(rankName => {
         const radio = document.querySelector(`input[name="${rankName}"][value="${horseNum}"]`);
         if (radio) radio.checked = false;
       });
     };
 
-    // UIラジオボタンの状態同期 (編集中でない場合のみ反映)
+    // UIラジオボタンの状態反映（GASから取得したデータをセット）
     function syncWinnerRadios() {
-      if (isEditingWinnerRadios) return; // 管理者が手動入力中の場合は何もしない
-
       ['rank-1st', 'rank-2nd', 'rank-3rd'].forEach(rName => {
         document.querySelectorAll(`input[name="${rName}"]`).forEach(r => r.checked = false);
       });
@@ -823,11 +815,15 @@
       }
     }
 
-    async function fetchResults() {
+    // データ取得関数（管理モーダルが開いている最中は自動同期を抑止）
+    async function fetchResults(force = false) {
       if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
         resultsContainer.innerHTML = `<p class="text-amber-300 text-xs text-center py-2">GASのURLが未設定です</p>`;
         return;
       }
+
+      // 管理者画面が開いている最中の自動同期（タイマー実行）を無視
+      if (isAdminOpen && !force) return;
 
       try {
         const response = await fetch(GAS_WEB_APP_URL);
@@ -838,7 +834,11 @@
         
         isDeliberating = (data.isDeliberating === true || String(data.isDeliberating) === 'true');
         
-        syncWinnerRadios();
+        // 管理画面が開いていない場合のみラジオボタンを同期
+        if (!isAdminOpen || force) {
+          syncWinnerRadios();
+        }
+
         updateDeliberationUI();
 
         const myType = localStorage.getItem(STORAGE_KEY_TYPE);
@@ -920,6 +920,7 @@
         localStorage.removeItem(STORAGE_KEY_OPTION);
         localStorage.removeItem(REDEEMED_KEY);
         selectedOption = null;
+        isAdminOpen = false;
         adminModal.classList.add('hidden');
         showStep(elSelect);
         renderTanshoOptions();
@@ -968,7 +969,7 @@
           renderAdminData(data);
         } catch (err) {
           console.error(err);
-          fetchResults();
+          fetchResults(true);
         }
       }
 
@@ -977,14 +978,15 @@
     };
 
     btnOpenAdmin.onclick = () => {
+      isAdminOpen = true;
       adminModal.classList.remove('hidden');
       if (!adminControls.classList.contains('hidden')) {
-        fetchResults();
+        fetchResults(true);
       }
     };
 
     btnCloseAdmin.onclick = () => {
-      isEditingWinnerRadios = false; // モーダルを閉じたときに編集中フラグを解除
+      isAdminOpen = false;
       adminModal.classList.add('hidden');
     };
 
@@ -1005,7 +1007,7 @@
         if (res.success) {
           adminAuth.classList.add('hidden');
           adminControls.classList.remove('hidden');
-          fetchResults();
+          fetchResults(true);
         } else {
           alert('パスワードが違います');
         }
@@ -1014,7 +1016,7 @@
         if (pass === 'admin123') {
           adminAuth.classList.add('hidden');
           adminControls.classList.remove('hidden');
-          fetchResults();
+          fetchResults(true);
         } else {
           alert('パスワードが違います');
         }
@@ -1051,7 +1053,7 @@
       alert(isClosed ? '投票を締め切りました。' : '投票受付を再開しました。');
     };
 
-    // 着順確定処理（ラジオボタンの値を取得して送信）
+    // 着順確定処理
     btnSetWinner.onclick = async () => {
       const r1 = document.querySelector('input[name="rank-1st"]:checked');
       const r2 = document.querySelector('input[name="rank-2nd"]:checked');
@@ -1066,6 +1068,12 @@
         return;
       }
 
+      // 1~3着で同一馬が選択されていないかチェック
+      if ((w1 !== "0" && w1 === w2) || (w1 !== "0" && w1 === w3) || (w2 !== "0" && w2 === w3)) {
+        alert("同じ馬番が複数の着順に指定されています。着順を見直してください。");
+        return;
+      }
+
       btnSetWinner.disabled = true;
       btnSetWinner.textContent = '更新中...';
 
@@ -1075,10 +1083,6 @@
       isDeliberating = false;
       
       updateDeliberationUI();
-      
-      const myType = localStorage.getItem(STORAGE_KEY_TYPE);
-      const myOption = localStorage.getItem(STORAGE_KEY_OPTION);
-      if (myOption && myType) applyTicketResultStyle(myType, myOption);
 
       if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
         try {
@@ -1090,32 +1094,28 @@
           });
           
           setTimeout(async () => {
-            isEditingWinnerRadios = false; // 送信完了後にフラグ解除して最新化
-            await fetchResults();
+            await fetchResults(true);
             alert('着順結果を確定（審議解除）しました！');
           }, 400);
 
         } catch (err) {
           console.error(err);
-          alert('送信中にエラーが発生しましたが、ローカル表示を更新しました。');
-          isEditingWinnerRadios = false;
-          fetchResults();
+          alert('送信中にエラーが発生しましたが、画面表示を更新しました。');
+          fetchResults(true);
         }
-      } else {
-        isEditingWinnerRadios = false;
       }
 
       btnSetWinner.disabled = false;
       btnSetWinner.textContent = '着順結果を確定';
     };
 
-    // 着順を未確定に戻すリセット処理
+    // 着順を未確定に戻す全リセット処理
     btnResetWinner.onclick = async () => {
       if (!confirm("着順結果をクリアして未確定状態に戻しますか？")) return;
 
       btnResetWinner.disabled = true;
 
-      // ラジオボタン解除
+      // UI上のラジオボタン解除
       ['rank-1st', 'rank-2nd', 'rank-3rd'].forEach(rName => {
         document.querySelectorAll(`input[name="${rName}"]`).forEach(r => r.checked = false);
       });
@@ -1123,10 +1123,6 @@
       win1st = 0;
       win2nd = 0;
       win3rd = 0;
-
-      const myType = localStorage.getItem(STORAGE_KEY_TYPE);
-      const myOption = localStorage.getItem(STORAGE_KEY_OPTION);
-      if (myOption && myType) applyTicketResultStyle(myType, myOption);
 
       if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
         try {
@@ -1138,19 +1134,15 @@
           });
           
           setTimeout(async () => {
-            isEditingWinnerRadios = false;
-            await fetchResults();
+            await fetchResults(true);
             alert('着順を未確定にリセットしました！');
           }, 400);
 
         } catch (err) {
           console.error(err);
           alert('リセット処理中にエラーが発生しました');
-          isEditingWinnerRadios = false;
-          fetchResults();
+          fetchResults(true);
         }
-      } else {
-        isEditingWinnerRadios = false;
       }
 
       btnResetWinner.disabled = false;
@@ -1192,8 +1184,7 @@
     };
 
     btnRefreshAdminData.onclick = () => {
-      isEditingWinnerRadios = false;
-      fetchResults();
+      fetchResults(true);
     };
 
     init();
