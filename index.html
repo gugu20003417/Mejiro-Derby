@@ -6,120 +6,177 @@
   <title>めじろダービー馬券アプリ</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* 画像の鮮やかな緑色をベースカラー（#00734D）として定義 */
+    :root {
+      --brand-green: #00734D;
+      --brand-green-dark: #004d33;
+      --brand-green-light: #009966;
+    }
+    .bg-brand-green { background-color: var(--brand-green); }
+    .bg-brand-dark { background-color: var(--brand-green-dark); }
+    .border-brand-green { border-color: var(--brand-green); }
+    .text-brand-green { color: var(--brand-green); }
+
     .fade-in { animation: fadeIn 0.25s ease-in-out forwards; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* 白抜き（アウトライン）タイトルスタイル */
+    .title-white-outline {
+      color: #ffffff;
+      text-shadow: 
+        -2px -2px 0 var(--brand-green-dark),  
+         2px -2px 0 var(--brand-green-dark),
+        -2px  2px 0 var(--brand-green-dark),
+         2px  2px 0 var(--brand-green-dark),
+         0px  3px 6px rgba(0,0,0,0.4);
+    }
   </style>
 </head>
-<body class="bg-emerald-900 text-slate-800 min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-amber-200">
+<body class="bg-brand-green text-slate-800 min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-emerald-200">
 
-  <!-- ヘッダー：競馬場風看板 -->
-  <header class="bg-amber-500 text-slate-900 border-b-4 border-amber-600 shadow-lg py-3 px-4 text-center">
+  <!-- ヘッダー：画像をベースにした緑背景 ＋ 白抜きタイトル -->
+  <header class="bg-brand-dark border-b-4 border-emerald-950 shadow-xl py-4 px-4 text-center">
     <div class="max-w-lg mx-auto flex items-center justify-center gap-2">
-      <span class="text-2xl">🏇</span>
-      <h1 class="text-xl sm:text-2xl font-black tracking-wider">めじろダービー馬券アプリ</h1>
-      <span class="text-2xl">🏇</span>
+      <span class="text-2xl drop-shadow">🏇</span>
+      <h1 class="text-2xl sm:text-3xl font-black tracking-wider title-white-outline">
+        めじろダービー馬券アプリ
+      </h1>
+      <span class="text-2xl drop-shadow">🏇</span>
     </div>
   </header>
 
   <main class="flex-grow flex items-center justify-center p-4">
     <div class="w-full max-w-lg">
 
-      <!-- STEP 1: マークシート（選択画面） -->
-      <section id="step-select" class="bg-amber-50 border-4 border-amber-200 rounded-2xl p-5 sm:p-7 shadow-2xl fade-in relative overflow-hidden">
-        <div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg tracking-widest uppercase">
-          マークカード
+      <!-- STEP 1: 推し馬投票 -->
+      <section id="step-favorite" class="bg-emerald-50 border-4 border-emerald-200 rounded-2xl p-5 sm:p-7 shadow-2xl fade-in relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-rose-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg tracking-widest uppercase">
+          STEP 1 / 2
         </div>
 
-        <div class="border-b-2 border-dashed border-amber-300 pb-3 mb-5">
-          <h2 class="text-lg font-black text-emerald-950 flex items-center gap-2">
-            <span class="bg-emerald-800 text-white text-xs px-2 py-0.5 rounded">1着予想</span>
-            投票する馬番を選択
+        <div class="border-b-2 border-dashed border-emerald-300 pb-3 mb-5">
+          <h2 class="text-lg font-black text-brand-green flex items-center gap-2">
+            <span class="bg-rose-600 text-white text-xs px-2 py-0.5 rounded">推し馬</span>
+            あなたの「推し馬」を選択
           </h2>
-          <p class="text-slate-600 text-xs mt-1">1〜7枠の中から本命馬を1頭だけ塗りつぶしてください</p>
+          <p class="text-slate-600 text-xs mt-1">一番応援している大好きな馬を選んでください❤️</p>
         </div>
         
-        <div id="options-container" class="grid grid-cols-1 gap-2.5 mb-6">
-          <!-- 1〜7の馬番ボタンがJSで生成されます -->
-        </div>
+        <div id="fav-options-container" class="grid grid-cols-1 gap-2.5 mb-6"></div>
 
-        <button id="btn-confirm" disabled class="w-full py-3.5 rounded-xl font-black text-base bg-slate-300 text-slate-500 cursor-not-allowed transition-all duration-150 border-b-4 border-slate-400">
-          発券確認画面へ
+        <button id="btn-fav-next" disabled class="w-full py-3.5 rounded-xl font-black text-base bg-slate-300 text-slate-500 cursor-not-allowed transition-all duration-150 border-b-4 border-slate-400">
+          次へ（馬券購入へ）
         </button>
       </section>
 
-      <!-- STEP 2: 確認画面（発券確認） -->
-      <section id="step-confirm" class="hidden bg-amber-50 border-4 border-amber-200 rounded-2xl p-5 sm:p-7 shadow-2xl fade-in">
-        <div class="text-center mb-4">
-          <span class="inline-block bg-amber-200 text-amber-900 text-xs font-bold px-3 py-1 rounded-full mb-1">発券前確認</span>
-          <h2 class="text-xl font-black text-slate-900">買い目の確認</h2>
+      <!-- STEP 2: 馬券購入（1着予想） -->
+      <section id="step-ticket" class="hidden bg-emerald-50 border-4 border-emerald-200 rounded-2xl p-5 sm:p-7 shadow-2xl fade-in relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-brand-green text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg tracking-widest uppercase">
+          STEP 2 / 2
         </div>
 
-        <!-- 擬似馬券カード -->
-        <div class="bg-white border-2 border-slate-900 rounded-lg p-5 shadow-inner mb-6 relative">
-          <div class="text-[10px] text-slate-400 font-mono flex justify-between border-b pb-1 mb-3">
-            <span>MEJIRO DERBY</span>
-            <span>単勝馬券</span>
+        <div class="border-b-2 border-dashed border-emerald-300 pb-3 mb-5">
+          <h2 class="text-lg font-black text-brand-green flex items-center gap-2">
+            <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded">1着予想</span>
+            勝ち馬（馬券）を選択
+          </h2>
+          <p class="text-slate-600 text-xs mt-1">1着でゴールすると思う勝ち馬を選んでください</p>
+        </div>
+        
+        <div id="ticket-options-container" class="grid grid-cols-1 gap-2.5 mb-6"></div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btn-ticket-back" class="py-3 rounded-xl font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition border-b-4 border-slate-300">
+            戻る
+          </button>
+          <button id="btn-ticket-confirm" disabled class="col-span-2 py-3.5 rounded-xl font-black text-base bg-slate-300 text-slate-500 cursor-not-allowed transition-all duration-150 border-b-4 border-slate-400">
+            発券確認画面へ
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 3: 発券前確認 -->
+      <section id="step-confirm" class="hidden bg-emerald-50 border-4 border-emerald-200 rounded-2xl p-5 sm:p-7 shadow-2xl fade-in">
+        <div class="text-center mb-4">
+          <span class="inline-block bg-emerald-200 text-emerald-950 text-xs font-bold px-3 py-1 rounded-full mb-1">発券前最終確認</span>
+          <h2 class="text-xl font-black text-slate-900">投票内容の確認</h2>
+        </div>
+
+        <div class="bg-white border-2 border-slate-900 rounded-lg p-5 shadow-inner mb-6 space-y-4">
+          <div class="border-b pb-3">
+            <p class="text-slate-400 text-[11px] font-bold">❤️ 推し馬投票</p>
+            <p id="confirm-fav-target" class="text-2xl font-black text-rose-600 mt-1">◯ 番馬</p>
           </div>
-          <p class="text-slate-500 text-xs mb-1">選択馬番</p>
-          <p id="confirm-target" class="text-4xl font-black text-emerald-700 text-center py-2 border-y-2 border-emerald-800 my-2">
-            ◯ 番
-          </p>
-          <p class="text-center text-xs text-slate-500 font-bold mt-2">この馬券を購入（投票）しますか？</p>
+          <div>
+            <p class="text-slate-400 text-[11px] font-bold">🏇 1着予想馬券</p>
+            <p id="confirm-ticket-target" class="text-3xl font-black text-brand-green mt-1">◯ 番馬</p>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <button id="btn-back" class="w-full py-3 rounded-xl font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 active:scale-95 transition border-b-4 border-slate-300">
-            塗りなおす
+          <button id="btn-confirm-back" class="w-full py-3 rounded-xl font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition border-b-4 border-slate-300">
+            やり直す
           </button>
-          <button id="btn-submit" class="w-full py-3 rounded-xl font-black bg-emerald-600 hover:bg-emerald-500 active:scale-95 transition text-white border-b-4 border-emerald-800">
+          <button id="btn-submit" class="w-full py-3 rounded-xl font-black bg-brand-green hover:bg-emerald-600 text-white transition border-b-4 border-emerald-900">
             投票確定（購入）
           </button>
         </div>
       </section>
 
-      <!-- STEP 3: 馬券風 投票完了・オッズ（集計）画面 -->
+      <!-- STEP 4: 投票完了 ＆ 集計結果画面 -->
       <section id="step-voted" class="hidden space-y-5 fade-in py-2">
         
         <!-- 発行済み馬券カード -->
-        <div class="bg-amber-50 border-4 border-amber-300 rounded-xl p-5 shadow-2xl relative overflow-hidden">
-          <div class="absolute -right-6 -top-6 w-20 h-20 bg-emerald-600 rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px]">
+        <div class="bg-emerald-50 border-4 border-emerald-200 rounded-xl p-5 shadow-2xl relative overflow-hidden">
+          <div class="absolute -right-6 -top-6 w-20 h-20 bg-brand-green rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px]">
             済
           </div>
 
           <div class="border-b-2 border-slate-800 pb-2 mb-3 flex justify-between items-baseline">
-            <span class="font-black text-lg text-emerald-900">めじろダービー 投票券</span>
+            <span class="font-black text-lg text-brand-green">めじろダービー 投票券</span>
             <span class="text-xs font-mono font-bold text-slate-500">投票完了</span>
           </div>
 
           <!-- 巨大メイン表示 -->
-          <div class="bg-white border-2 border-slate-900 rounded-lg p-6 text-center my-3 shadow-inner">
-            <p class="text-xs font-bold text-slate-500 mb-1">あなたの本命馬</p>
-            <h2 id="voted-result-text" class="text-3xl sm:text-5xl font-black text-emerald-800 leading-tight">
-              あなたは◯番に<br class="sm:hidden">投票しました
-            </h2>
-          </div>
-
-          <div class="text-[10px] text-slate-500 font-mono text-right">
-            端末認証ID: LOCAL-DEVICE-VOTED
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-6 text-center my-3 shadow-inner space-y-3">
+            <div>
+              <p class="text-xs font-bold text-slate-400">あなたの推し馬</p>
+              <p id="voted-fav-text" class="text-xl sm:text-2xl font-black text-rose-600">◯番馬</p>
+            </div>
+            <hr class="border-slate-200">
+            <div>
+              <p class="text-xs font-bold text-slate-400">あなたの本命馬券</p>
+              <h2 id="voted-ticket-text" class="text-3xl sm:text-4xl font-black text-brand-green leading-tight">
+                あなたは◯番に<br class="sm:hidden">投票しました
+              </h2>
+            </div>
           </div>
         </div>
 
-        <!-- オッズ・投票分布表 -->
-        <div class="bg-emerald-950 border-2 border-emerald-700 rounded-xl p-5 text-white shadow-xl space-y-3">
-          <div class="flex items-center justify-between border-b border-emerald-800 pb-2">
-            <h3 class="font-black text-amber-400 text-sm flex items-center gap-1">
-              <span>📊</span> 全体オッズ（投票分布）
-            </h3>
-            <span id="total-votes-count" class="text-[11px] bg-emerald-900 border border-emerald-700 text-emerald-200 px-2.5 py-0.5 rounded-full font-mono">
+        <!-- 集計タブ・結果表示エリア -->
+        <div class="bg-brand-dark border-2 border-emerald-700 rounded-xl p-5 text-white shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-emerald-800 pb-3">
+            <h3 class="font-black text-amber-300 text-sm">📊 全体集計結果</h3>
+            <span id="total-votes-count" class="text-[11px] bg-emerald-950 border border-emerald-700 text-emerald-200 px-2.5 py-0.5 rounded-full font-mono">
               総投票数: -- 票
             </span>
           </div>
 
+          <!-- 集計切り替えタブ -->
+          <div class="grid grid-cols-2 gap-2 bg-emerald-950/70 p-1 rounded-lg">
+            <button id="tab-ticket" class="py-1.5 rounded font-bold text-xs bg-amber-400 text-slate-900 shadow">
+              🏇 馬券（1着予想）
+            </button>
+            <button id="tab-favorite" class="py-1.5 rounded font-bold text-xs text-emerald-300 hover:text-white">
+              ❤️ 推し馬ランキング
+            </button>
+          </div>
+
           <div id="results-container" class="space-y-2">
-            <p class="text-center text-emerald-400 text-xs py-4">最新オッズを計算中...</p>
+            <p class="text-center text-emerald-300 text-xs py-4">最新データを計算中...</p>
           </div>
         </div>
       </section>
@@ -127,11 +184,8 @@
     </div>
   </main>
 
-  <!-- フッター -->
-  <footer class="p-3 text-center border-t border-emerald-800/80 bg-emerald-950/60">
-    <p class="text-[11px] text-emerald-300 font-mono">
-      © めじろダービー 投票システム
-    </p>
+  <footer class="p-3 text-center border-t border-emerald-950 bg-brand-dark">
+    <p class="text-[11px] text-emerald-200 font-mono">© めじろダービー 投票システム</p>
   </footer>
 
   <script>
@@ -139,78 +193,114 @@
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz6YO7yemS2lNx1g2qoJpnIlmRfomcwglFHm6W2m8B38JWhXyJxlE03rPUgpuW11737/exec";
 
     const TOTAL_OPTIONS = 7;
-    const STORAGE_KEY = 'voted_option_id';
+    const STORAGE_KEY_FAV = 'voted_fav_id';
+    const STORAGE_KEY_TICKET = 'voted_ticket_id';
 
-    let selectedOption = null;
+    let selectedFav = null;
+    let selectedTicket = null;
+    let currentData = null;
+    let activeTab = 'ticket';
 
-    const elSelect = document.getElementById('step-select');
+    const elFav = document.getElementById('step-favorite');
+    const elTicket = document.getElementById('step-ticket');
     const elConfirm = document.getElementById('step-confirm');
     const elVoted = document.getElementById('step-voted');
-    
-    const optionsContainer = document.getElementById('options-container');
-    const btnConfirm = document.getElementById('btn-confirm');
-    const btnBack = document.getElementById('btn-back');
+
+    const btnFavNext = document.getElementById('btn-fav-next');
+    const btnTicketBack = document.getElementById('btn-ticket-back');
+    const btnTicketConfirm = document.getElementById('btn-ticket-confirm');
+    const btnConfirmBack = document.getElementById('btn-confirm-back');
     const btnSubmit = document.getElementById('btn-submit');
-    
-    const confirmTarget = document.getElementById('confirm-target');
-    const votedResultText = document.getElementById('voted-result-text');
+
+    const tabTicket = document.getElementById('tab-ticket');
+    const tabFavorite = document.getElementById('tab-favorite');
     const resultsContainer = document.getElementById('results-container');
     const totalVotesCount = document.getElementById('total-votes-count');
 
     function init() {
-      renderOptions();
+      renderFavOptions();
+      renderTicketOptions();
       checkVotedStatus();
     }
 
-    function renderOptions() {
-      optionsContainer.innerHTML = '';
+    function renderFavOptions() {
+      const container = document.getElementById('fav-options-container');
+      container.innerHTML = '';
       for (let i = 1; i <= TOTAL_OPTIONS; i++) {
         const btn = document.createElement('button');
-        btn.className = `option-btn w-full p-3 rounded-lg border-2 border-amber-300 bg-white hover:bg-amber-100 text-left font-bold flex items-center justify-between transition-all duration-100 shadow-sm`;
+        btn.className = `fav-btn w-full p-3 rounded-lg border-2 border-emerald-300 bg-white hover:bg-rose-50 text-left font-bold flex items-center justify-between transition-all duration-100 shadow-sm`;
+        btn.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center font-black text-sm">${i}</span>
+            <span class="text-slate-800 font-bold">${i} 番馬</span>
+          </div>
+          <span class="text-xs font-bold text-rose-500 opacity-0 mark-text">❤️ 推し</span>
+        `;
+        btn.onclick = () => {
+          selectedFav = i;
+          document.querySelectorAll('.fav-btn').forEach(b => {
+            b.classList.remove('border-rose-500', 'bg-rose-50');
+            b.querySelector('.mark-text').classList.add('opacity-0');
+          });
+          btn.classList.add('border-rose-500', 'bg-rose-50');
+          btn.querySelector('.mark-text').classList.remove('opacity-0');
+          btnFavNext.disabled = false;
+          btnFavNext.className = "w-full py-3.5 rounded-xl font-black text-base bg-rose-600 hover:bg-rose-500 text-white transition-all cursor-pointer border-b-4 border-rose-800 shadow-lg";
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    function renderTicketOptions() {
+      const container = document.getElementById('ticket-options-container');
+      container.innerHTML = '';
+      for (let i = 1; i <= TOTAL_OPTIONS; i++) {
+        const btn = document.createElement('button');
+        btn.className = `ticket-btn w-full p-3 rounded-lg border-2 border-emerald-300 bg-white hover:bg-emerald-100 text-left font-bold flex items-center justify-between transition-all duration-100 shadow-sm`;
         btn.innerHTML = `
           <div class="flex items-center gap-3">
             <span class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-sm">${i}</span>
             <span class="text-slate-800 font-bold">${i} 番馬</span>
           </div>
-          <div class="w-10 h-6 border-2 border-slate-400 rounded bg-amber-50 flex items-center justify-center mark-box">
+          <div class="w-10 h-6 border-2 border-slate-400 rounded bg-emerald-50 flex items-center justify-center mark-box">
             <span class="w-full h-full bg-slate-900 opacity-0 transition-opacity"></span>
           </div>
         `;
-        btn.onclick = () => selectOption(i, btn);
-        optionsContainer.appendChild(btn);
+        btn.onclick = () => {
+          selectedTicket = i;
+          document.querySelectorAll('.ticket-btn').forEach(b => {
+            b.classList.remove('border-brand-green', 'bg-emerald-100');
+            b.querySelector('.mark-box span').classList.add('opacity-0');
+          });
+          btn.classList.add('border-brand-green', 'bg-emerald-100');
+          btn.querySelector('.mark-box span').classList.remove('opacity-0');
+          btnTicketConfirm.disabled = false;
+          btnTicketConfirm.className = "col-span-2 py-3.5 rounded-xl font-black text-base bg-brand-green hover:bg-emerald-600 text-white transition-all cursor-pointer border-b-4 border-emerald-900 shadow-lg";
+        };
+        container.appendChild(btn);
       }
     }
 
-    function selectOption(id, element) {
-      selectedOption = id;
-      document.querySelectorAll('.option-btn').forEach(btn => {
-        btn.classList.remove('border-emerald-600', 'bg-emerald-50');
-        btn.querySelector('.mark-box span').classList.add('opacity-0');
-      });
-      element.classList.add('border-emerald-600', 'bg-emerald-50');
-      element.querySelector('.mark-box span').classList.remove('opacity-0');
-
-      btnConfirm.disabled = false;
-      btnConfirm.className = "w-full py-3.5 rounded-xl font-black text-base bg-emerald-600 hover:bg-emerald-500 text-white active:scale-[0.99] transition-all duration-150 cursor-pointer shadow-lg border-b-4 border-emerald-800";
-    }
-
     function checkVotedStatus() {
-      const savedVoted = localStorage.getItem(STORAGE_KEY);
-      if (savedVoted) {
-        showVotedScreen(savedVoted);
+      const savedFav = localStorage.getItem(STORAGE_KEY_FAV);
+      const savedTicket = localStorage.getItem(STORAGE_KEY_TICKET);
+
+      if (savedFav && savedTicket) {
+        showVotedScreen(savedFav, savedTicket);
         fetchResults();
       } else {
-        showStep(elSelect);
+        showStep(elFav);
       }
     }
 
     function showStep(target) {
-      [elSelect, elConfirm, elVoted].forEach(el => el.classList.add('hidden'));
+      [elFav, elTicket, elConfirm, elVoted].forEach(el => el.classList.add('hidden'));
       target.classList.remove('hidden');
     }
 
-    function showVotedScreen(optionId) {
-      votedResultText.innerHTML = `あなたは <span class="text-emerald-700 font-black">${optionId}番</span> に<br class="sm:hidden">投票しました`;
+    function showVotedScreen(favId, ticketId) {
+      document.getElementById('voted-fav-text').textContent = `${favId} 番馬`;
+      document.getElementById('voted-ticket-text').innerHTML = `あなたは <span class="text-brand-green font-black">${ticketId}番</span> に<br class="sm:hidden">投票しました`;
       showStep(elVoted);
     }
 
@@ -222,18 +312,20 @@
 
       try {
         const response = await fetch(GAS_WEB_APP_URL);
-        const data = await response.json();
-        renderResultsGraph(data);
+        currentData = await response.json();
+        renderResultsGraph();
       } catch (err) {
         console.error(err);
-        resultsContainer.innerHTML = `<p class="text-red-300 text-xs text-center py-2">オッズの取得に失敗しました</p>`;
+        resultsContainer.innerHTML = `<p class="text-red-300 text-xs text-center py-2">データの取得に失敗しました</p>`;
       }
     }
 
-    function renderResultsGraph(data) {
-      const total = data.total || 0;
-      const counts = data.counts || {};
-      const myVoted = localStorage.getItem(STORAGE_KEY);
+    function renderResultsGraph() {
+      if (!currentData) return;
+
+      const total = currentData.total || 0;
+      const counts = (activeTab === 'ticket') ? (currentData.ticketCounts || {}) : (currentData.favoriteCounts || {});
+      const myVoted = (activeTab === 'ticket') ? localStorage.getItem(STORAGE_KEY_TICKET) : localStorage.getItem(STORAGE_KEY_FAV);
 
       totalVotesCount.textContent = `総投票数: ${total} 票`;
       resultsContainer.innerHTML = '';
@@ -247,37 +339,39 @@
         row.className = 'space-y-1';
         row.innerHTML = `
           <div class="flex justify-between text-xs">
-            <span class="${isMyChoice ? 'text-amber-300 font-black' : 'text-slate-300'}">
-              ${i}番馬 ${isMyChoice ? '★あなたの本命' : ''}
+            <span class="${isMyChoice ? (activeTab === 'ticket' ? 'text-amber-300 font-black' : 'text-rose-300 font-black') : 'text-slate-300'}">
+              ${i}番馬 ${isMyChoice ? (activeTab === 'ticket' ? '★あなたの本命' : '❤️あなたの推し') : ''}
             </span>
             <span class="text-emerald-200 font-mono">${count}票 (${percent}%)</span>
           </div>
-          <div class="w-full h-2.5 bg-emerald-900 border border-emerald-800 rounded-full overflow-hidden flex">
-            <div class="h-full ${isMyChoice ? 'bg-amber-400' : 'bg-emerald-500'} transition-all duration-500" style="width: ${percent}%"></div>
+          <div class="w-full h-2.5 bg-emerald-950 border border-emerald-800 rounded-full overflow-hidden flex">
+            <div class="h-full ${isMyChoice ? (activeTab === 'ticket' ? 'bg-amber-400' : 'bg-rose-500') : 'bg-emerald-500'} transition-all duration-500" style="width: ${percent}%"></div>
           </div>
         `;
         resultsContainer.appendChild(row);
       }
     }
 
-    btnConfirm.onclick = () => {
-      if (!selectedOption) return;
-      confirmTarget.textContent = `${selectedOption} 番`;
+    btnFavNext.onclick = () => showStep(elTicket);
+    btnTicketBack.onclick = () => showStep(elFav);
+    
+    btnTicketConfirm.onclick = () => {
+      document.getElementById('confirm-fav-target').textContent = `${selectedFav} 番馬`;
+      document.getElementById('confirm-ticket-target').textContent = `${selectedTicket} 番馬`;
       showStep(elConfirm);
     };
 
-    btnBack.onclick = () => {
-      showStep(elSelect);
-    };
+    btnConfirmBack.onclick = () => showStep(elTicket);
 
     btnSubmit.onclick = async () => {
-      if (!selectedOption) return;
+      if (!selectedFav || !selectedTicket) return;
 
       btnSubmit.disabled = true;
-      btnSubmit.textContent = '発券処理中...';
+      btnSubmit.textContent = '送信中...';
 
-      localStorage.setItem(STORAGE_KEY, selectedOption);
-      showVotedScreen(selectedOption);
+      localStorage.setItem(STORAGE_KEY_FAV, selectedFav);
+      localStorage.setItem(STORAGE_KEY_TICKET, selectedTicket);
+      showVotedScreen(selectedFav, selectedTicket);
 
       if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
         try {
@@ -285,10 +379,10 @@
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ option: selectedOption })
+            body: JSON.stringify({ favorite: selectedFav, ticket: selectedTicket })
           });
-          const data = await response.json();
-          renderResultsGraph(data);
+          currentData = await response.json();
+          renderResultsGraph();
         } catch (err) {
           console.error(err);
           fetchResults();
@@ -297,6 +391,20 @@
 
       btnSubmit.disabled = false;
       btnSubmit.textContent = '投票確定（購入）';
+    };
+
+    tabTicket.onclick = () => {
+      activeTab = 'ticket';
+      tabTicket.className = "py-1.5 rounded font-bold text-xs bg-amber-400 text-slate-900 shadow";
+      tabFavorite.className = "py-1.5 rounded font-bold text-xs text-emerald-300 hover:text-white";
+      renderResultsGraph();
+    };
+
+    tabFavorite.onclick = () => {
+      activeTab = 'favorite';
+      tabFavorite.className = "py-1.5 rounded font-bold text-xs bg-rose-600 text-white shadow";
+      tabTicket.className = "py-1.5 rounded font-bold text-xs text-emerald-300 hover:text-white";
+      renderResultsGraph();
     };
 
     init();
