@@ -166,4 +166,140 @@
       optionsContainer.innerHTML = '';
       for (let i = 1; i <= TOTAL_OPTIONS; i++) {
         const btn = document.createElement('button');
-        btn.className
+        btn.className = `option-btn w-full p-3 rounded-lg border-2 border-amber-300 bg-white hover:bg-amber-100 text-left font-bold flex items-center justify-between transition-all duration-100 shadow-sm`;
+        btn.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-sm">${i}</span>
+            <span class="text-slate-800 font-bold">${i} 番馬</span>
+          </div>
+          <div class="w-10 h-6 border-2 border-slate-400 rounded bg-amber-50 flex items-center justify-center mark-box">
+            <span class="w-full h-full bg-slate-900 opacity-0 transition-opacity"></span>
+          </div>
+        `;
+        btn.onclick = () => selectOption(i, btn);
+        optionsContainer.appendChild(btn);
+      }
+    }
+
+    function selectOption(id, element) {
+      selectedOption = id;
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('border-emerald-600', 'bg-emerald-50');
+        btn.querySelector('.mark-box span').classList.add('opacity-0');
+      });
+      element.classList.add('border-emerald-600', 'bg-emerald-50');
+      element.querySelector('.mark-box span').classList.remove('opacity-0');
+
+      btnConfirm.disabled = false;
+      btnConfirm.className = "w-full py-3.5 rounded-xl font-black text-base bg-emerald-600 hover:bg-emerald-500 text-white active:scale-[0.99] transition-all duration-150 cursor-pointer shadow-lg border-b-4 border-emerald-800";
+    }
+
+    function checkVotedStatus() {
+      const savedVoted = localStorage.getItem(STORAGE_KEY);
+      if (savedVoted) {
+        showVotedScreen(savedVoted);
+        fetchResults();
+      } else {
+        showStep(elSelect);
+      }
+    }
+
+    function showStep(target) {
+      [elSelect, elConfirm, elVoted].forEach(el => el.classList.add('hidden'));
+      target.classList.remove('hidden');
+    }
+
+    function showVotedScreen(optionId) {
+      votedResultText.innerHTML = `あなたは <span class="text-emerald-700 font-black">${optionId}番</span> に<br class="sm:hidden">投票しました`;
+      showStep(elVoted);
+    }
+
+    async function fetchResults() {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        resultsContainer.innerHTML = `<p class="text-amber-300 text-xs text-center py-2">GASのURLが未設定です</p>`;
+        return;
+      }
+
+      try {
+        const response = await fetch(GAS_WEB_APP_URL);
+        const data = await response.json();
+        renderResultsGraph(data);
+      } catch (err) {
+        console.error(err);
+        resultsContainer.innerHTML = `<p class="text-red-300 text-xs text-center py-2">オッズの取得に失敗しました</p>`;
+      }
+    }
+
+    function renderResultsGraph(data) {
+      const total = data.total || 0;
+      const counts = data.counts || {};
+      const myVoted = localStorage.getItem(STORAGE_KEY);
+
+      totalVotesCount.textContent = `総投票数: ${total} 票`;
+      resultsContainer.innerHTML = '';
+
+      for (let i = 1; i <= TOTAL_OPTIONS; i++) {
+        const count = counts[i] || 0;
+        const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+        const isMyChoice = String(i) === String(myVoted);
+
+        const row = document.createElement('div');
+        row.className = 'space-y-1';
+        row.innerHTML = `
+          <div class="flex justify-between text-xs">
+            <span class="${isMyChoice ? 'text-amber-300 font-black' : 'text-slate-300'}">
+              ${i}番馬 ${isMyChoice ? '★あなたの本命' : ''}
+            </span>
+            <span class="text-emerald-200 font-mono">${count}票 (${percent}%)</span>
+          </div>
+          <div class="w-full h-2.5 bg-emerald-900 border border-emerald-800 rounded-full overflow-hidden flex">
+            <div class="h-full ${isMyChoice ? 'bg-amber-400' : 'bg-emerald-500'} transition-all duration-500" style="width: ${percent}%"></div>
+          </div>
+        `;
+        resultsContainer.appendChild(row);
+      }
+    }
+
+    btnConfirm.onclick = () => {
+      if (!selectedOption) return;
+      confirmTarget.textContent = `${selectedOption} 番`;
+      showStep(elConfirm);
+    };
+
+    btnBack.onclick = () => {
+      showStep(elSelect);
+    };
+
+    btnSubmit.onclick = async () => {
+      if (!selectedOption) return;
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = '発券処理中...';
+
+      localStorage.setItem(STORAGE_KEY, selectedOption);
+      showVotedScreen(selectedOption);
+
+      if (GAS_WEB_APP_URL && !GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        try {
+          const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ option: selectedOption })
+          });
+          const data = await response.json();
+          renderResultsGraph(data);
+        } catch (err) {
+          console.error(err);
+          fetchResults();
+        }
+      }
+
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = '投票確定（購入）';
+    };
+
+    init();
+  </script>
+</body>
+</html>
