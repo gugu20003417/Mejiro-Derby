@@ -79,6 +79,11 @@
           マークカード
         </div>
 
+        <!-- 共通注記バナー（1種類のみ発券可能） -->
+        <div class="mb-4 bg-amber-100 border border-amber-400 text-amber-950 rounded-lg p-2.5 text-center text-xs font-bold font-heavy-gothic shadow-sm">
+          ⚠️ 馬券の発券は1端末につき1つの形式のみです。<br class="hidden sm:inline">購入確定後は他の形式を選べなくなります。
+        </div>
+
         <!-- 式別（単勝 / 連勝複式 / 3連単）切替タブ -->
         <div class="mb-5 border-b-2 border-emerald-300 pb-4">
           <label class="block text-xs font-bold text-slate-500 mb-2">式別（券種）を選択</label>
@@ -97,18 +102,25 @@
 
         <!-- 1. 単勝フォーム -->
         <div id="form-tansho" class="space-y-3">
-          <div class="pb-2">
+          <div class="pb-2 border-b border-emerald-200">
             <h2 class="text-base font-black text-brand-green flex items-center gap-2 font-heavy-gothic">
               <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded font-normal">単勝</span>
               1着馬を1頭選択
             </h2>
+            <p class="text-[11px] text-slate-500 mt-1 font-bold">※単勝を発券すると連勝複式・3連単は購入できません</p>
           </div>
           <div id="tansho-options-container" class="grid grid-cols-1 gap-2.5 mb-6"></div>
         </div>
 
         <!-- 2. 連勝複式（馬連）フォーム -->
         <div id="form-renfuku" class="hidden space-y-4">
-          <p class="text-xs text-slate-600 font-bold border-b pb-2">1着・2着に入る2頭を選択（順不同・重複不可）</p>
+          <div class="pb-2 border-b border-emerald-200">
+            <h2 class="text-base font-black text-brand-green flex items-center gap-2 font-heavy-gothic">
+              <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded font-normal">連勝複式</span>
+              1着・2着に入る2頭を選択
+            </h2>
+            <p class="text-[11px] text-slate-500 mt-1 font-bold">※連勝複式を発券すると単勝・3連単は購入できません（着順不同・重複不可）</p>
+          </div>
           
           <div>
             <label class="text-xs font-black text-emerald-900 bg-emerald-200 px-2 py-0.5 rounded font-heavy-gothic">1頭目</label>
@@ -127,7 +139,13 @@
 
         <!-- 3. 3連単フォーム -->
         <div id="form-sanrentan" class="hidden space-y-4">
-          <p class="text-xs text-slate-600 font-bold border-b pb-2">1着・2着・3着の馬番をそれぞれ選択（着順通り・重複不可）</p>
+          <div class="pb-2 border-b border-emerald-200">
+            <h2 class="text-base font-black text-brand-green flex items-center gap-2 font-heavy-gothic">
+              <span class="bg-brand-green text-white text-xs px-2 py-0.5 rounded font-normal">3連単</span>
+              1着・2着・3着の馬番をそれぞれ選択
+            </h2>
+            <p class="text-[11px] text-slate-500 mt-1 font-bold">※3連単を発券すると単勝・連勝複式は購入できません（着順通り・重複不可）</p>
+          </div>
           
           <div>
             <label class="text-xs font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded font-heavy-gothic">🥇 1着予想</label>
@@ -172,7 +190,9 @@
           <p id="confirm-target" class="text-3xl sm:text-4xl font-black text-brand-green text-center py-2 border-y-2 border-emerald-800 my-2 font-heavy-gothic">
             ◯ 番
           </p>
-          <p class="text-center text-xs text-slate-500 font-bold mt-2">この馬券を購入（投票）しますか？</p>
+          <p class="text-center text-xs text-amber-900 font-bold mt-2 bg-amber-50 p-2 rounded border border-amber-200">
+            ⚠️ 発券後は他の馬券形式を選ぶことはできません。この買い目で確定しますか？
+          </p>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -272,7 +292,7 @@
           </button>
         </div>
 
-        <!-- 着順指定（1着・2着・3着を選ぶだけ） -->
+        <!-- 着順指定 -->
         <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-xl space-y-3">
           <label class="block text-xs font-black text-amber-900 font-heavy-gothic">🏆 着順の確定（1着・2着・3着）</label>
           
@@ -355,7 +375,7 @@
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxlxiu2Ed0H71MAmi1B5y4ke4qD0H0YbFHfYXBsNyqErnl0kBO2Xm8tU6NKFpyggLPz/exec";
 
     const TOTAL_OPTIONS = 7;
-    const STORAGE_KEY_TYPE = 'voted_ticket_type'; // 'tansho', 'renfuku', 'sanrentan'
+    const STORAGE_KEY_TYPE = 'voted_ticket_type';
     const STORAGE_KEY_OPTION = 'voted_option_id';
     const REDEEMED_KEY = 'is_prize_redeemed';
     const CLOSED_KEY = 'is_voting_closed';
@@ -517,7 +537,6 @@
       const v2 = selectRenfuku2.value;
 
       if (v1 && v2 && v1 !== v2) {
-        // 小さい方の番号を先頭にソートして保存 (例: "1-3")
         const sorted = [Number(v1), Number(v2)].sort((a, b) => a - b);
         selectedOption = `${sorted[0]}-${sorted[1]}`;
         btnConfirm.disabled = false;
@@ -546,7 +565,6 @@
       }
     }
 
-    // 式別タブ切替
     tabTansho.onclick = () => switchTicketTab('tansho');
     tabRenfuku.onclick = () => switchTicketTab('renfuku');
     tabSanrentan.onclick = () => switchTicketTab('sanrentan');
@@ -620,7 +638,6 @@
         return;
       }
 
-      // レース結果が未確定の場合
       if (!win1st || win1st === 0) {
         votedCard.className = "bg-emerald-50 border-4 border-emerald-200 rounded-xl p-5 shadow-2xl relative overflow-hidden";
         votedBadge.className = "absolute -right-6 -top-6 w-20 h-20 bg-brand-green rotate-12 flex items-end justify-center pb-2 text-white font-black text-[10px] font-heavy-gothic";
@@ -640,19 +657,14 @@
 
       let isHit = false;
 
-      // 1. 単勝の判定 (1着馬と一致)
       if (type === 'tansho') {
         isHit = (Number(myOptionId) === Number(win1st));
-      } 
-      // 2. 連勝複式の判定 (1着・2着の組合せ※順不同)
-      else if (type === 'renfuku') {
+      } else if (type === 'renfuku') {
         if (win1st && win2nd) {
           const winPair = [Number(win1st), Number(win2nd)].sort((a,b) => a - b).join('-');
           isHit = (String(myOptionId) === String(winPair));
         }
-      } 
-      // 3. 3連単の判定 (1着-2着-3着が順序通り一致)
-      else if (type === 'sanrentan') {
+      } else if (type === 'sanrentan') {
         if (win1st && win2nd && win3rd) {
           const winTrio = `${win1st}-${win2nd}-${win3rd}`;
           isHit = (String(myOptionId) === String(winTrio));
@@ -915,7 +927,7 @@
 
           renderResultsGraph(data);
           renderAdminData(data);
-          alert('着順結果を確定・全全体共有しました！');
+          alert('着順結果を確定・全体共有しました！');
         } catch (err) {
           console.error(err);
           alert('送信エラーが発生しました');
