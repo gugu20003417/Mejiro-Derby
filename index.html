@@ -312,7 +312,7 @@
       </h3>
 
       <div id="admin-auth" class="space-y-3">
-        <p class="text-xs text-slate-600">管理パスワードを入力してください（初期: admin123）</p>
+        <p class="text-xs text-slate-600">管理用パスワードを入力してください</p>
         <input type="password" id="admin-pass" placeholder="パスワード" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-600">
         <button id="btn-admin-login" class="w-full py-2 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 font-heavy-gothic">ログイン</button>
       </div>
@@ -421,7 +421,7 @@
 
   <script>
     // ★Google Apps ScriptのWebアプリURL（末尾が /exec のもの）を設定してください
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwtge2EN7LaYsblqk4tUBvslHgNHAeFzw2mjcyLG-452KDkGZ5vl6wfAI82TFhZzdoT/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbysG7l9c4VsB12eGzjDJiQYkyGNY1BhczDhKmQ7dbqsEcX39UyRlwmEWjPSlrUfVP2H/exec";
 
     const TOTAL_OPTIONS = 7;
     const STORAGE_KEY_TYPE = 'voted_ticket_type';
@@ -780,7 +780,7 @@
         win2nd = data.win2nd || 0;
         win3rd = data.win3rd || 0;
         
-        // 判定漏れを防ぐため明示的にブーリアン判定
+        // 明示的にブーリアン判定
         isDeliberating = (data.isDeliberating === true || String(data.isDeliberating) === 'true');
         
         selectWin1st.value = win1st;
